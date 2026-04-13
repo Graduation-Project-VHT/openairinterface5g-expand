@@ -515,8 +515,7 @@ copy_ulreq(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP) {
 
 #include <openair1/PHY/LTE_TRANSPORT/transport_proto.h>
 
-void
-eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
+void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
                           frame_t frameP,
                           sub_frame_t subframeP) {
   // Logging to CSV file
@@ -1015,6 +1014,19 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   } else {
     schedule_ulsch_phy_test(module_idP,frameP,subframeP);
     schedule_ue_spec_phy_test(module_idP,frameP,subframeP,mbsfn_status);
+  }
+  
+  // Add for calling Max C/I instead of auto scheduler - Duy (13/04/2026)
+  int scheduler_mode = MAC_SCHEDULER_MAX_CI; // Biến này lấy từ Config/Scenario Manager
+
+  if (scheduler_mode == MAC_SCHEDULER_MAX_CI) {
+      // Gọi hàm Execution của bạn
+      schedule_dlsch_max_ci_execution(module_idP, frameP, subframeP); // Lập lịch Downlink
+      schedule_ulsch_max_ci_execution(module_idP, frameP, subframeP); // Lập lịch Uplink
+  } 
+  else if (scheduler_mode == MAC_SCHEDULER_PF) {
+      // Gọi hàm Proportional Fair cũ của OAI
+      schedule_ue_spec(module_idP, frameP, subframeP); 
   }
 
   /* Allocate CCEs for good after scheduling is done */

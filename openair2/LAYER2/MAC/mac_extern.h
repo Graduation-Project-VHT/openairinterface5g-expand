@@ -40,4 +40,14 @@ static const uint32_t BSR_TABLE[BSR_TABLE_SIZE] = {0,     10,    12,    14,    1
                                                    1326,  1552,  1817,  2127,  2490,  2915,  3413,  3995,  4677,  5467,  6411,  7505,  8787,   10287,  12043,  14099,
                                                    16507, 19325, 22624, 26487, 31009, 36304, 42502, 49759, 58255, 68201, 79846, 93479, 109439, 128125, 150000, 300000};
 
+// Max C/I
+extern int max_ci_dl_run(module_id_t Mod_id, int CC_id, frame_t frame, sub_frame_t subframe, UE_list_t *UE_list, int max_num_ue, int n_rbg_sched, uint8_t *rbgalloc_mask, void *data);
+
+extern int max_ci_ul_run(module_id_t Mod_id, int CC_id, frame_t frame, sub_frame_t subframe, UE_list_t *UE_list, int max_num_ue, int num_contig_rb, contig_rbs_t *rbs, void *data);
+
+extern void schedule_dlsch_max_ci_execution(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP);
+
+extern void schedule_ulsch_max_ci_execution(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP);
+
 #endif //DEF_H
+
