@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <net/if.h>
 #include <netinet/ether.h>
+#include "common/utils/threadPool/notified_fifo.h"
 
 #define MAX_INST 4
 
@@ -28,6 +29,14 @@
 #define ECPRIPCID_BYTES 2
 #define APP_HEADER_SIZE_BYTES (ECPRICOMMON_BYTES + ECPRIPCID_BYTES + sizeof(openair0_timestamp_t))
 #define ECPRIREV 1 // ECPRI Version 1, C=0 - single ECPRI message per OAI TX packet
+
+/*! \brief Structure used for initializing UDP read threads */
+typedef struct {
+  openair0_device_t *device;
+  int thread_id;
+  pthread_t pthread;
+  notifiedFIFO_t *resp;
+} udp_ctx_t;
 
 /*!\brief opaque ethernet data structure */
 typedef struct {
@@ -115,6 +124,8 @@ typedef struct {
   struct ether_header ehd;
   /*!\brief local address (user) for RAW socket*/
   struct sockaddr_ll local_addrd_ll;
+  /*!brief UDP TX thread context*/
+  udp_ctx_t **utx;
 } eth_state_t;
 
 

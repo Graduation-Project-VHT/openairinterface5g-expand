@@ -11,6 +11,8 @@
 #include "common/utils/ocp_itti/intertask_interface.h"
 #include "openair2/GNB_APP/gnb_paramdef.h"
 #include "openair3/ocp-gtpu/gtp_itf.h"
+#include "common/config/config_paramdesc.h"
+#include "common/config/config_userapi.h"
 
 static void get_NGU_S1U_addr(char **addr, uint16_t *port)
 {

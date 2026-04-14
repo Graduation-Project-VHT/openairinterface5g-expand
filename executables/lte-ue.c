@@ -300,8 +300,6 @@ void init_UE(int nb_inst,
                                     UE_thread,
                                     (void *)UE), "");
   }
-
-  printf("UE threads created by %ld\n", gettid());
 }
 
 // Initiating all UEs within a single set of threads for PHY_STUB. Future extensions -> multiple

@@ -30,7 +30,6 @@
 #include <sys/sysinfo.h>
 #include "radio/COMMON/common_lib.h"
 #include "assertions.h"
-#include "PHY/types.h"
 
 /* help strings definition for command line options, used in CMDLINE_XXX_DESC macros and printed when -h option is used */
 #define CONFIG_HLP_DLMCS_PHYTEST  "Set the downlink MCS for PHYTEST mode\n"

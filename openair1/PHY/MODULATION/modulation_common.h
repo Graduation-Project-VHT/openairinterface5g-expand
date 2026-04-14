@@ -10,6 +10,14 @@
  * @{
 */
 
+/*! \brief Extension Type */
+typedef enum {
+  CYCLIC_PREFIX,
+  CYCLIC_SUFFIX,
+  ZEROS,
+  NONE
+} Extension_t;
+
 /**
    \fn void PHY_ofdm_mod(int *input,int *output,int fftsize,unsigned char nb_symbols,unsigned short nb_prefix_samples,Extension_t
    etype) This function performs OFDM modulation with cyclic extension or zero-padding

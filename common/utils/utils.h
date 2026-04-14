@@ -123,6 +123,8 @@ static inline void *malloc_or_fail(size_t size)
 int hex_char_to_hex_value (char c);
 // Converts an hexadecimal ASCII coded string into its value.**
 int hex_string_to_hex_value (uint8_t *hex_value, const char *hex_string, int size);
+// Converts a decimal ASCII coded string into its BCD encoded value.
+int digit_string_to_bcd_value(uint8_t *bcd_value, const char *digit_string, int size);
 
 /* Map task id to printable name. */
 typedef struct {

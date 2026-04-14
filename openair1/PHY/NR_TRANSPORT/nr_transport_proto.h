@@ -178,7 +178,12 @@ rx_prach_out_t rx_nr_prach(const prach_item_t *, int occasion);
 
 void rx_nr_prach_ru(prach_item_t *, int32_t **, NR_DL_FRAME_PARMS *frame_parms, int N_TA_offset);
 
-prach_item_t *find_nr_prach(prach_list_t *, int frame, int slot, int nb_rx, find_type_t type);
+typedef enum {
+  NR_SEARCH_EXIST = 0,
+  NR_SEARCH_EXIST_OR_FREE
+} nr_find_type_t;
+
+prach_item_t *find_nr_prach(prach_list_t *, int frame, int slot, int nb_rx, nr_find_type_t type);
 void nr_fill_pucch(PHY_VARS_gNB *gNB,
                    int frame,
                    int slot,

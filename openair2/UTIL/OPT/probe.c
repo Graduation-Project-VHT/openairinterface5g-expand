@@ -466,6 +466,7 @@ static void SendFrameNR(guint8 radioType, ws_trace_t *t)
 #include <common/ran_context.h>
 extern RAN_CONTEXT_t RC;
 #include <openair1/PHY/phy_extern_ue.h>
+#include "openair1/PHY/defs_eNB.h"
 /* Remote serveraddress (where Wireshark is running) */
 
 void trace_pdu_implementation(ws_trace_t *t)

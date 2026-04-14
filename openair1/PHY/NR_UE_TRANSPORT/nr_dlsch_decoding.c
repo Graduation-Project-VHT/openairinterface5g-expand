@@ -293,7 +293,7 @@ void nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
 
     if (harq_process->decodeResult) {
       LOG_D(PHY, "DLSCH received ok \n");
-      harq_process->status = SCH_IDLE;
+      harq_process->status = NR_SCH_IDLE;
       dlsch->last_iteration_cnt = dlsch->max_ldpc_iterations - 1;
     } else {
       LOG_D(PHY, "DLSCH received nok \n");

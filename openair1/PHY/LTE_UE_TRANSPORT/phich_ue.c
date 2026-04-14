@@ -111,10 +111,10 @@ void rx_phich(PHY_VARS_UE *ue,
   memset(d,0,24*sizeof(int8_t));
   phich_d_ptr = phich_d;
 
-  // x1 is set in lte_gold_generic
+  // x1 is set in gold_generic
   x2 = (((subframe+1)*((frame_parms->Nid_cell<<1)+1))<<9) + frame_parms->Nid_cell;
 
-  s = lte_gold_generic(&x1, &x2, reset);
+  s = gold_generic(&x1, &x2, reset);
 
   // compute scrambling sequence
   for (i=0; i<12; i++) {

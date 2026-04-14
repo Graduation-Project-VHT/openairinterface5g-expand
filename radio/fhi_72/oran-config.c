@@ -14,6 +14,7 @@
 
 #include "stdio.h"
 #include "string.h"
+#include "log.h"
 
 #ifdef OAI_MPLANE
 #include "mplane/ru-mplane-api.h"

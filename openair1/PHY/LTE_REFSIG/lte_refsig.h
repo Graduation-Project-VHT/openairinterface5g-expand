@@ -10,7 +10,7 @@
 #define __LTE_REFSIG_DEFS__H__
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_UE.h"
-
+#include "PHY/gold.h"
 /** @ingroup _PHY_REF_SIG
  * @{
 */

@@ -30,7 +30,7 @@ void init_ncs_cell(LTE_DL_FRAME_PARMS *frame_parms,uint8_t ncs_cell[20][7])
 
       for (i=0; i<8; i++) {
         if ((j%32) == 0) {
-          s = lte_gold_generic(&x1,&x2,reset);
+          s = gold_generic(&x1,&x2,reset);
           //    printf("s %x\n",s);
           reset=0;
         }

@@ -11,6 +11,8 @@
 #include "assertions.h"
 #include "common_lib.h"
 #include "record_player.h"
+#include "common/config/config_paramdesc.h"
+#include "common/config/config_userapi.h"
 
 /*! \brief read the oai recorder or player configuration, called from common device code
  * \param recplay_conf:  store parameters

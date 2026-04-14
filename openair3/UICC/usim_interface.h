@@ -37,6 +37,10 @@ typedef struct {
   int  nssai_sd;
   pdu_session_config_t pdu_sessions[256];
   int n_pdu_sessions;
+  char *routing_indicatorStr;
+  int protection_scheme;
+  char *home_network_public_keyStr;
+  int home_network_public_key_id;
   uint8_t key[16];
   uint8_t opc[16];
   uint8_t amf[2];
@@ -49,6 +53,7 @@ typedef struct {
   uint8_t ck[16]; 
   uint8_t ik[16]; 
   uint8_t milenage_res[8];
+  uint8_t home_network_public_key[32];
 } uicc_t;
 
 /*

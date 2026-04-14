@@ -33,7 +33,6 @@
 #include <common/utils/LOG/log.h>
 #include "assertions.h"
 
-//#include <complex.h>
 #include "time_meas.h"
 #include "common/platform_types.h"
 #include "softmodem-common.h"
@@ -42,7 +41,7 @@
 #include <pthread.h>
 
 #include "TOOLS/tools_defs.h"
-
+#include "PHY/CODING/coding_defs.h"
 #include "common/openairinterface5g_limits.h"
 #include "common/utils/LOG/log.h"
 
@@ -964,39 +963,6 @@ extern int sync_var;
 #define MBSFN_FDD_SF6 0x10
 #define MBSFN_FDD_SF7 0x08
 #define MBSFN_FDD_SF8 0x04
-
-#define NUMBER_OF_NR_RU_PRACH_OCCASIONS_MAX 12
-
-typedef struct {
-  pthread_mutex_t mutex_failure;
-  bool failed;
-} decode_abort_t;
-
-static inline void init_abort(decode_abort_t *ab)
-{
-  int ret = pthread_mutex_init(&ab->mutex_failure, NULL);
-  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
-  ab->failed = false;
-}
-
-static inline bool check_abort(decode_abort_t *ab)
-{
-  int ret = pthread_mutex_lock(&ab->mutex_failure);
-  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
-  bool failed = ab->failed;
-  ret = pthread_mutex_unlock(&ab->mutex_failure);
-  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
-  return failed;
-}
-
-static inline void set_abort(decode_abort_t *ab, bool v)
-{
-  int ret = pthread_mutex_lock(&ab->mutex_failure);
-  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
-  ab->failed = v;
-  ret = pthread_mutex_unlock(&ab->mutex_failure);
-  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
-}
 
 typedef uint8_t(decoder_if_t)(int16_t *y,
                               int16_t *y2,

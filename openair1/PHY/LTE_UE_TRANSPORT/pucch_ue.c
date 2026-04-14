@@ -321,7 +321,7 @@ static inline void pucch2x_scrambling(LTE_DL_FRAME_PARMS *fp,int subframe,uint16
   uint8_t c;
 
   x2 = (rnti) + ((uint32_t)(1+subframe)<<16)*(1+(fp->Nid_cell<<1)); //this is c_init in 36.211 Sec 6.3.1
-  s = lte_gold_generic(&x1, &x2, 1);
+  s = gold_generic(&x1, &x2, 1);
   for (i=0;i<19;i++) {
     c = (uint8_t)((s>>i)&1);
     btilde[i] = (((B>>i)&1) ^ c);
@@ -632,8 +632,8 @@ void generate_pucch3x(int32_t **txdataF,
 
     // Scrambling
     cinit = (subframe + 1) * ((2 * frame_parms->Nid_cell + 1)<<16) + rnti;
-    s0 = lte_gold_generic(&x1,&cinit,1);
-    s1 = lte_gold_generic(&x1,&cinit,0);
+    s0 = gold_generic(&x1,&cinit,1);
+    s1 = gold_generic(&x1,&cinit,0);
 
     for (i=0; i<48; i++) {
       s = (i<32)? s0:s1;

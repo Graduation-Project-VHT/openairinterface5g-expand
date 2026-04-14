@@ -160,7 +160,7 @@ patch is available [here](../cmake_targets/tools/install_wls_lib.patch)
 
 Clone the code and apply the patch
 
-    git clone -b oran_f_release https://gerrit.o-ran-sc.org/r/o-du/phy.git
+    git clone -b oran_f_release https://github.com/openairinterface/o-du-phy.git
     cd phy/wls_lib/
     git apply ~/openairinterface5g/cmake_targets/tools/install_wls_lib.patch
 

@@ -3,7 +3,7 @@
  */
 
 #include "nr_refsig.h"
-#include "openair1/PHY/LTE_TRANSPORT/transport_proto.h" // for lte_gold_generic()
+#include "openair1/PHY/gold.h"
 
 #define REFRESH_RATE (1000 * 100)
 
@@ -141,9 +141,9 @@ uint32_t *gold_cache(uint32_t key, int length)
   *new = (gold_cache_t){.key = key, .length = length, .usage = 1};
   unsigned int x1 = 0, x2 = key;
   uint32_t *sequence = firstFree + roundedHeaderSz;
-  *sequence++ = lte_gold_generic(&x1, &x2, 1);
+  *sequence++ = gold_generic(&x1, &x2, 1);
   for (int n = 1; n < length; n++)
-    *sequence++ = lte_gold_generic(&x1, &x2, 0);
+    *sequence++ = gold_generic(&x1, &x2, 0);
   LOG_D(PHY, "created a gold sequence, start %d; len %d\n", key, length);
   return firstFree + roundedHeaderSz;
 }

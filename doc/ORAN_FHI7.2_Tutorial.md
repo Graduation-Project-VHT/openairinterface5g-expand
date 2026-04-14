@@ -378,7 +378,7 @@ Download ORAN FHI DU library, checkout the correct version, and apply the correc
 
 #### F release
 ```bash
-git clone https://gerrit.o-ran-sc.org/r/o-du/phy.git ~/phy
+git clone https://github.com/openairinterface/o-du-phy.git ~/phy
 cd ~/phy
 git checkout oran_f_release_v1.0
 git apply ~/openairinterface5g/cmake_targets/tools/oran_fhi_integration_patches/F/oaioran_F.patch

@@ -405,7 +405,7 @@ unsigned int ulsch_decoding(PHY_VARS_eNB *eNB,
   else
     harq_pid = subframe2harq_pid(frame_parms,proc->frame_rx,subframe);
 
-  // x1 is set in lte_gold_generic
+  // x1 is set in gold_generic
   uint32_t x2 =
       ((uint32_t)ulsch->rnti << 14) + ((uint32_t)subframe << 9) + frame_parms->Nid_cell; // this is c_init in 36.211 Sec 6.3.1
   LTE_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_processes[harq_pid];

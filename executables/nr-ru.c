@@ -22,7 +22,6 @@
 
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 
-#include "PHY/types.h"
 #include "PHY/defs_nr_common.h"
 #include "PHY/phy_extern.h"
 #include "PHY/NR_TRANSPORT/nr_transport_proto.h"
@@ -982,7 +981,7 @@ void *ru_thread(void *param)
 
         // Do PRACH RU processing
         prach_item_t *p =
-            find_nr_prach(&gNB->prach_list, proc->frame_rx, proc->tti_rx, gNB->frame_parms.nb_antennas_rx, SEARCH_EXIST);
+            find_nr_prach(&gNB->prach_list, proc->frame_rx, proc->tti_rx, gNB->frame_parms.nb_antennas_rx, NR_SEARCH_EXIST);
         if (p) {
           // need to extract RACH data for later processing by rx_nr_prach()
           rx_nr_prach_ru(p, ru->common.rxdata, ru->nr_frame_parms, ru->N_TA_offset);
@@ -1016,7 +1015,6 @@ int nr_start_if(struct RU_t_s *ru, struct PHY_VARS_gNB_s *gNB) {
     for (int i = 0; i < ru->nb_rx; i++)
       ru->openair0_cfg.rxbase[i] = ru->common.rxdata[i];
   ru->openair0_cfg.rxsize = ru->nr_frame_parms->samples_per_subframe*10;
-  reset_meas(&ru->ifdevice.tx_fhaul);
   return ru->ifdevice.trx_start_func(&ru->ifdevice);
 }
 
