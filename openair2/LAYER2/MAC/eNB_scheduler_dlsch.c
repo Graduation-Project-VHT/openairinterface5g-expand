@@ -7,6 +7,7 @@
  */
 
 #include "scheduler_log.h"
+#include <stdint.h>
 #include <stdio.h>
 #define _GNU_SOURCE
 
@@ -841,8 +842,8 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
         }
 
         // DL Scheduler logging after mcs
-        if (scheduler_csv && nb_rb > 0) {
-          fprintf(scheduler_csv,
+        if (DL_scheduler_csv && nb_rb > 0) {
+          fprintf(DL_scheduler_csv,
                   "%ld,%d,%d,%x,DL,%d,%d,%d,%d,%d\n",
                   (long)(frameP * 10 + subframeP),
                   frameP,
@@ -853,7 +854,7 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
                   TBS,
                   ue_sched_ctrl->dl_cqi[0],
                   0);
-          fflush(scheduler_csv);
+          fflush(DL_scheduler_csv);
         }
 
         LOG_D(MAC,
