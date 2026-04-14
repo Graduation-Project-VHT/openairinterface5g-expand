@@ -1015,18 +1015,19 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     schedule_ulsch_phy_test(module_idP,frameP,subframeP);
     schedule_ue_spec_phy_test(module_idP,frameP,subframeP,mbsfn_status);
   }
-  
-  // Add for calling Max C/I instead of auto scheduler - Duy (13/04/2026)
-  int scheduler_mode = MAC_SCHEDULER_MAX_CI; // Biến này lấy từ Config/Scenario Manager
 
-  if (scheduler_mode == MAC_SCHEDULER_MAX_CI) {
-      // Gọi hàm Execution của bạn
-      schedule_dlsch_max_ci_execution(module_idP, frameP, subframeP); // Lập lịch Downlink
-      schedule_ulsch_max_ci_execution(module_idP, frameP, subframeP); // Lập lịch Uplink
+  // Add for calling Max C/I instead of auto scheduler - Duy (13/04/2026)
+  int current_scheduler = Get_Simulation_Config_Scheduler(); 
+
+  if (current_scheduler == SCHEDULER_MAX_CI) {
+      //[CỦA BẠN] Gọi luồng Max C/I
+      schedule_dlsch_max_ci_execution(module_idP, frameP, subframeP);
+      schedule_ulsch_max_ci_execution(module_idP, frame_tx, subframe_tx); 
   } 
-  else if (scheduler_mode == MAC_SCHEDULER_PF) {
-      // Gọi hàm Proportional Fair cũ của OAI
-      schedule_ue_spec(module_idP, frameP, subframeP); 
+  else if (current_scheduler == SCHEDULER_ROUND_ROBIN) {
+      // [CỦA OAI MẶC ĐỊNH] Đẩy code cũ vào trong nhánh này
+      schedule_ulsch(module_idP, frame_rx, subframe_rx, frame_tx, subframe_tx);
+      schedule_dlsch(module_idP, frameP, subframeP, mbsfn_flag);
   }
 
   /* Allocate CCEs for good after scheduling is done */

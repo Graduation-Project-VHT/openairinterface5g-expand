@@ -11,6 +11,21 @@
 #include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 #include "nfapi_interface.h"
 
+
+// 1. Hàm khởi tạo (Setup) và Hủy (Unset) - Bắt buộc phải có theo Interface
+void *max_ci_dl_setup(void) {
+    // Nếu thuật toán của bạn cần cấp phát bộ nhớ (malloc), làm ở đây.
+    // Max C/I không cần lưu trạng thái (stateless) nên trả về NULL.
+    return NULL; 
+}
+
+void max_ci_dl_unset(void **data) {
+    // Giải phóng bộ nhớ nếu có
+}
+
+void *max_ci_ul_setup(void) { return NULL; }
+void max_ci_ul_unset(void **data) { }
+
 // ==============================================================================
 // BƯỚC 1: PRE-PROCESSOR CHO DOWNLINK (THUẬT TOÁN LÕI - OFDMA)
 // ==============================================================================
@@ -146,8 +161,28 @@ int max_ci_ul_run(module_id_t Mod_id, int CC_id, frame_t frame, sub_frame_t subf
     return rbs[0].length + (num_contig_rb > 1 ? rbs[1].length : 0);
 }
 
+// ========================================================================
+// 3. ĐÓNG GÓI THÀNH STRUCT THUẬT TOÁN (Chuẩn OAI Plugin)
+// ========================================================================
+
+default_sched_dl_algo_t max_ci_dl_algo = {
+    .name  = "MAX_CI_DL",
+    .setup = max_ci_dl_setup,
+    .unset = max_ci_dl_unset,
+    .run   = max_ci_dl_run,
+    .data  = NULL
+};
+
+default_sched_ul_algo_t max_ci_ul_algo = {
+    .name  = "MAX_CI_UL",
+    .setup = max_ci_ul_setup,
+    .unset = max_ci_ul_unset,
+    .run   = max_ci_ul_run,
+    .data  = NULL
+};
+
 // ==============================================================================
-// BƯỚC 3: EXECUTION DOWNLINK (GIAO TIẾP END-TO-END RLC -> MAC -> nFAPI)
+// BƯỚC 4: EXECUTION DOWNLINK (GIAO TIẾP END-TO-END RLC -> MAC -> nFAPI)
 // ==============================================================================
 void schedule_dlsch_max_ci_execution(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP) 
 {

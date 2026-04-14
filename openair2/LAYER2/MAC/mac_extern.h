@@ -49,5 +49,9 @@ extern void schedule_dlsch_max_ci_execution(module_id_t module_idP, frame_t fram
 
 extern void schedule_ulsch_max_ci_execution(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP);
 
+// Xuất (Expose) cấu trúc thuật toán Max C/I để các file khác lấy được
+extern default_sched_dl_algo_t max_ci_dl_algo;
+extern default_sched_ul_algo_t max_ci_ul_algo;
+
 #endif //DEF_H
 

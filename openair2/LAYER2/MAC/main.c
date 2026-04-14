@@ -4,6 +4,7 @@
 
 #include <dlfcn.h>
 #include "mac.h"
+#include "scenario.h"
 #include "mac_proto.h"
 #include "mac_extern.h"
 #include "assertions.h"
@@ -17,7 +18,17 @@
 #include "common/utils/system.h"
 
 extern RAN_CONTEXT_t RC;
+SimulationConfig sim_config;
 
+int main(int argc, char **argv) {
+    // Hardcode test trước, sau này có thể viết hàm đọc từ file .txt hoặc tham số dòng lệnh
+    sim_config.active_scheduler = SCHEDULER_MAX_CI; 
+    sim_config.num_ues = 2;
+    
+    // ... gọi các hàm khởi tạo hệ thống của OAI (mac_top_init...)
+    
+    // ... vòng lặp thời gian TTI ...
+}
 void lte_dump_mac_stats(eNB_MAC_INST *mac, FILE *fd)
 {
   UE_info_t *UE_info = &(mac->UE_info);

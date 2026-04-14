@@ -11,8 +11,9 @@
 
 #include "assertions.h"
 #include "LAYER2/MAC/mac.h"
+#include "scenario.h"
+#include "mac_extern.h"
 #include "LAYER2/MAC/mac_proto.h"
-#include "LAYER2/MAC/mac_extern.h"
 #include "common/utils/LOG/log.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
@@ -28,6 +29,47 @@ extern RAN_CONTEXT_t RC;
 #define DEBUG_eNB_SCHEDULER
 #define DEBUG_HEADER_PARSING 1
 
+
+void init_mac_scheduler_plugins(module_id_t module_idP) 
+{
+    eNB_MAC_INST *mac = RC.mac[module_idP];
+
+    LOG_I(MAC, "[INIT] Loading MAC Scheduler Plugins for Module %d...\n", module_idP);
+
+    // Đọc cấu hình từ Scenario Manager
+    int active_scheduler = Get_Simulation_Config_Scheduler();
+
+    if (active_scheduler == SCHEDULER_MAX_CI) {
+        // 1. Bind the Maximum Carrier-to-Interference (Max C/I) Algorithm
+        mac->pre_processor_dl.dl_algo = max_ci_dl_algo;
+        mac->pre_processor_ul.ul_algo = max_ci_ul_algo;
+
+        // 2. Initialize internal algorithm states
+        mac->pre_processor_dl.dl_algo.data = mac->pre_processor_dl.dl_algo.setup();
+        mac->pre_processor_ul.ul_algo.data = mac->pre_processor_ul.ul_algo.setup();
+
+        LOG_I(MAC, "[INIT] Successfully loaded MAX C/I Scheduler.\n");
+    } 
+    else if (active_scheduler == SCHEDULER_QOS_AWARE) {
+        // Chỗ này dành cho QoS-Aware của bạn sau này
+        // mac->pre_processor_dl.dl_algo = qos_aware_dl_algo;
+        // ...
+    }
+    else {
+        // Mặc định (Fallback): Sử dụng Round Robin / FairRR của OAI
+        extern default_sched_dl_algo_t default_sched_dl_algo; // Struct FairRR mặc định của OAI
+        extern default_sched_ul_algo_t default_sched_ul_algo;
+
+        mac->pre_processor_dl.dl_algo = default_sched_dl_algo;
+        mac->pre_processor_ul.ul_algo = default_sched_ul_algo;
+
+        mac->pre_processor_dl.dl_algo.data = mac->pre_processor_dl.dl_algo.setup();
+        mac->pre_processor_ul.ul_algo.data = mac->pre_processor_ul.ul_algo.setup();
+
+        LOG_I(MAC, "[INIT] Loaded Default OAI Scheduler (Fair Round Robin).\n");
+    }
+}
+
 int next_ue_list_looped(UE_list_t* list, int UE_id) {
   if (UE_id < 0)
     return list->head;
@@ -42,6 +84,7 @@ int get_rbg_size_last(module_id_t Mod_id, int CC_id) {
   else
     return RBGsize;
 }
+
 
 bool try_allocate_harq_retransmission(module_id_t Mod_id,
                                       int CC_id,
@@ -576,8 +619,7 @@ store_dlsch_buffer(module_id_t Mod_id,
 
 
 // This function assigns pre-available RBS to each UE in specified sub-bands before scheduling is done
-void
-dlsch_scheduler_pre_processor(module_id_t Mod_id,
+void dlsch_scheduler_pre_processor(module_id_t Mod_id,
                               int CC_id,
                               frame_t frameP,
                               sub_frame_t subframeP) {
@@ -645,7 +687,7 @@ dlsch_scheduler_pre_processor(module_id_t Mod_id,
     n_rbg_sched += rbgalloc_mask[i];
   }
 
-  mac->pre_processor_dl.dl_algo.run(Mod_id,
+  /* mac->pre_processor_dl.dl_algo.run(Mod_id,
                                     CC_id,
                                     frameP,
                                     subframeP,
@@ -653,7 +695,11 @@ dlsch_scheduler_pre_processor(module_id_t Mod_id,
                                     4, // max_num_ue
                                     n_rbg_sched,
                                     rbgalloc_mask,
-                                    mac->pre_processor_dl.dl_algo.data);
+                                    mac->pre_processor_dl.dl_algo.data); 
+  Scheduler mặc định cũ*/
+
+  // Scheduler mới - Duy
+  init_mac_scheduler_plugins(Mod_id);
 
   // the following block is meant for validation of the pre-processor to check
   // whether all UE allocations are non-overlapping and is not necessary for
