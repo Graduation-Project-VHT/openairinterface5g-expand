@@ -15,13 +15,13 @@ void scheduler_log_init(void)
   }
 
   // Write the CSV header
-  fprintf(scheduler_csv,
-          "timestamp_ms,frame,subframe,rnti,direction,"
-          "nb_rb,mcs,tbs_bytes,cqi,retx\n");
+    fprintf(scheduler_csv,
+            "timestamp_ms,frame,subframe,rnti,direction,"
+            "nb_rb,mcs,tbs_bytes,cqi,retx,hol_delay_ms,avg_thr_kbps,mlwdf_score\n");
 
-  fflush(scheduler_csv);
-  LOG_I(MAC, "[SCHED_LOG] CSV loggin started, writing to /openairinterface5g/logs/scheduler_log.csv\n");
-}
+    fflush(scheduler_csv);
+    LOG_I(MAC, "[SCHED_LOG] CSV loggin started, writing to /openairinterface5g/logs/scheduler_log.csv\n");
+  }
 
 void scheduler_log_close(void) {
   if (scheduler_csv) {
