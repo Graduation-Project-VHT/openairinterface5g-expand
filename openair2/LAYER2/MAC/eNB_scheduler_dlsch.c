@@ -10,6 +10,7 @@
 #include <stdio.h>
 #define _GNU_SOURCE
 
+#include "eNB_scheduler_mlwdf.h"
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_proto.h"
 #include "LAYER2/MAC/mac_extern.h"
@@ -459,11 +460,11 @@ void schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframe
     }
 
     if (mbsfn_flag[CC_id] != 0)
-      continue;
+          continue;
+        schedule_ue_spec_mlwdf(module_idP, CC_id, frameP, subframeP);
 
-    schedule_ue_spec(module_idP, CC_id, frameP, subframeP);
-  }
-}
+      }
+    }
 
 // changes to pre-processor for eMTC
 //------------------------------------------------------------------------------
