@@ -16,7 +16,7 @@ void scheduler_log_init(void)
     return;
   }
 
-  const char *header = "timestamp_ms,frame,subframe,rnti,direction,nb_rb,mcs,tbs_bytes,cqi,retx";
+  const char *header = "timestamp_ms,frame,subframe,rnti,direction,nb_rb,rb_util(%),mcs,tbs_bytes,sdu_bytes,cqi,retx,harq_pid";
   // Write the CSV header
   fprintf(DL_scheduler_csv, "%s\n", header);
   fprintf(UL_scheduler_csv, "%s\n", header);
