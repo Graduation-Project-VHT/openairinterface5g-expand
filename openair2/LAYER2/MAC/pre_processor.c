@@ -25,49 +25,73 @@
 #include "common/ran_context.h"
 
 extern RAN_CONTEXT_t RC;
+SimulationConfig sim_config;
 
 #define DEBUG_eNB_SCHEDULER
 #define DEBUG_HEADER_PARSING 1
 
+// ==============================================================================
+// FUNCTION: generate_dynamic_cqi
+// DESCRIPTION: Giả lập sự biến thiên của kênh truyền (Fading) theo mô hình Random Walk
+// ==============================================================================
+void generate_dynamic_cqi(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP) 
+{
+    eNB_MAC_INST *eNB = RC.mac[module_idP];
+    UE_info_t *UE_info = &eNB->UE_info;
+    int CC_id = 0;
 
+    // Duyệt qua tất cả các UE đang active trong mạng
+    for (int UE_id = UE_info->list.head; UE_id >= 0; UE_id = UE_info->list.next[UE_id]) {
+        
+        // Đọc CQI hiện tại của UE
+        uint8_t current_cqi = UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id];
+
+        // Nếu mới khởi tạo (cqi = 0), set giá trị base ban đầu
+        if (current_cqi == 0 || current_cqi == 15) { // Reset khỏi giá trị lý tưởng 15
+            current_cqi = (UE_id % 2 == 0) ? 14 : 6; 
+        }
+
+        // TẠO BƯỚC NHẢY FADING (Delta)
+        // Delta sẽ là -1, 0, hoặc +1
+        int delta = (rand() % 3) - 1; 
+
+        int new_cqi = current_cqi + delta;
+
+        // KIỂM SOÁT BIÊN ĐỘ (Profile của từng UE)
+        if (UE_id % 2 == 0) {
+            // PROFILE: UE Đứng im gần trạm (CQI cao: 12 -> 15)
+            if (new_cqi > 15) new_cqi = 15;
+            if (new_cqi < 12) new_cqi = 12;
+        } else {
+            // PROFILE: UE Di chuyển/Rìa trạm (CQI thấp: 3 -> 9)
+            if (new_cqi > 9) new_cqi = 9;
+            if (new_cqi < 3) new_cqi = 3;
+        }
+
+        // Ghi đè CQI mới vào bộ nhớ của Lớp MAC (OAI Architecture)
+        UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id] = new_cqi;
+        
+    }
+}
 void init_mac_scheduler_plugins(module_id_t module_idP) 
 {
-    eNB_MAC_INST *mac = RC.mac[module_idP];
+    // Đặt static flag NGAY DÒNG ĐẦU TIÊN CỦA HÀM
+    static int is_already_initialized = 0;
+    if (is_already_initialized == 1) return; // Nếu đã init rồi thì thoắt ngay!
+    is_already_initialized = 1;              // Đánh dấu là đã chạy
 
+    // Toàn bộ code khởi tạo và LOG nằm dưới này thì nó sẽ CHỈ CHẠY 1 LẦN
+    eNB_MAC_INST *mac = RC.mac[module_idP];
     LOG_I(MAC, "[INIT] Loading MAC Scheduler Plugins for Module %d...\n", module_idP);
 
-    // Đọc cấu hình từ Scenario Manager
+    sim_config.active_scheduler = SCHEDULER_MAX_CI; 
     int active_scheduler = Get_Simulation_Config_Scheduler();
 
     if (active_scheduler == SCHEDULER_MAX_CI) {
-        // 1. Bind the Maximum Carrier-to-Interference (Max C/I) Algorithm
         mac->pre_processor_dl.dl_algo = max_ci_dl_algo;
-        mac->pre_processor_ul.ul_algo = max_ci_ul_algo;
-
-        // 2. Initialize internal algorithm states
         mac->pre_processor_dl.dl_algo.data = mac->pre_processor_dl.dl_algo.setup();
-        mac->pre_processor_ul.ul_algo.data = mac->pre_processor_ul.ul_algo.setup();
-
-        LOG_I(MAC, "[INIT] Successfully loaded MAX C/I Scheduler.\n");
+        LOG_I(MAC, "[INIT] Successfully loaded MAX C/I Scheduler for DOWNLINK.\n");
     } 
-    else if (active_scheduler == SCHEDULER_QOS_AWARE) {
-        // Chỗ này dành cho QoS-Aware của bạn sau này
-        // mac->pre_processor_dl.dl_algo = qos_aware_dl_algo;
-        // ...
-    }
-    else {
-        // Mặc định (Fallback): Sử dụng Round Robin / FairRR của OAI
-        extern default_sched_dl_algo_t default_sched_dl_algo; // Struct FairRR mặc định của OAI
-        extern default_sched_ul_algo_t default_sched_ul_algo;
-
-        mac->pre_processor_dl.dl_algo = default_sched_dl_algo;
-        mac->pre_processor_ul.ul_algo = default_sched_ul_algo;
-
-        mac->pre_processor_dl.dl_algo.data = mac->pre_processor_dl.dl_algo.setup();
-        mac->pre_processor_ul.ul_algo.data = mac->pre_processor_ul.ul_algo.setup();
-
-        LOG_I(MAC, "[INIT] Loaded Default OAI Scheduler (Fair Round Robin).\n");
-    }
 }
 
 int next_ue_list_looped(UE_list_t* list, int UE_id) {
@@ -687,7 +711,7 @@ void dlsch_scheduler_pre_processor(module_id_t Mod_id,
     n_rbg_sched += rbgalloc_mask[i];
   }
 
-  /* mac->pre_processor_dl.dl_algo.run(Mod_id,
+  mac->pre_processor_dl.dl_algo.run(Mod_id,
                                     CC_id,
                                     frameP,
                                     subframeP,
@@ -696,10 +720,7 @@ void dlsch_scheduler_pre_processor(module_id_t Mod_id,
                                     n_rbg_sched,
                                     rbgalloc_mask,
                                     mac->pre_processor_dl.dl_algo.data); 
-  Scheduler mặc định cũ*/
 
-  // Scheduler mới - Duy
-  init_mac_scheduler_plugins(Mod_id);
 
   // the following block is meant for validation of the pre-processor to check
   // whether all UE allocations are non-overlapping and is not necessary for
