@@ -847,6 +847,7 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
         // Assume RAH format 2
         int mcs = eNB_UE_stats->dlsch_mcs1;
 
+
         /* TODO make special function */
         // decrease mcs until TBS falls below required length
         while ((TBS > sdu_length_total + header_length_total + ta_len) && (mcs > 0)) {
@@ -855,11 +856,20 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
         }
 
         // if we have decreased too much or we don't have enough RBs, increase MCS
-        while (TBS < sdu_length_total + header_length_total + ta_len && mcs < 28) {
+        while (TBS < sdu_length_total + header_length_total + ta_len && mcs < 20) {
           // the second part of this condition is useless since dl_pow_off is
           // always 2?
           //&& ((ue_sched_ctrl->dl_pow_off[CC_id] > 0 && mcs < 28) || (ue_sched_ctrl->dl_pow_off[CC_id] == 0 && mcs <= 15))) {
           mcs++;
+          TBS = get_TBS_DL(mcs, nb_rb);
+        }
+
+
+        // Cap MCS to prevent Turbo decoder failures in RFSim
+        // High MCS (e.g. 28 = 64QAM CR~0.93) causes consistent NACK in RFSim
+        // because the simulated channel still applies noise constraints
+        if (mcs > 16) {
+          mcs = 16;
           TBS = get_TBS_DL(mcs, nb_rb);
         }
 
@@ -879,7 +889,7 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
                   TBS,
                   sdu_length_total,
                   ue_sched_ctrl->dl_cqi[0],
-                  (round_DL != 8) ? 1 : 0,
+                  0,
                   harq_pid);
           fflush(DL_scheduler_csv);
         }

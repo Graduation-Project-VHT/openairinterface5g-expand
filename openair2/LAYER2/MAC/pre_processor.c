@@ -214,7 +214,10 @@ int rr_dl_run(module_id_t Mod_id,
       continue;
     }
     UE_info->UE_sched_ctrl[UE_id].pre_dci_dl_pdu_idx = idx;
-    const int mcs = cqi_to_mcs[cqi];
+    int mcs = cqi_to_mcs[cqi];
+
+    if (mcs > 20) mcs = 20;  // Cap for RFSim
+
     UE_info->eNB_UE_stats[CC_id][UE_id].dlsch_mcs1 = mcs;
     const uint32_t B = UE_info->UE_template[CC_id][UE_id].dl_buffer_total;
     rb_required[UE_id] = find_nb_rb_DL(mcs, B, n_rbg_sched * RBGsize, RBGsize);
@@ -321,7 +324,11 @@ int pf_wbcqi_dl_run(module_id_t Mod_id,
       if (UE_info->UE_template[CC_id][UE_id].dl_buffer_total == 0)
         continue;
 
-      const int mcs = cqi_to_mcs[UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
+      int mcs = cqi_to_mcs[UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
+
+      // MCS cap
+      if (mcs > 20) mcs = 20;
+
       const uint32_t tbs = get_TBS_DL(mcs, RBGsize);
       coeff_ue[UE_id] = (float) tbs / thr_ue[UE_id];
       //LOG_I(MAC, "    pf UE %d: old TBS %d thr %f MCS %d TBS %d coeff %f\n",
@@ -356,7 +363,9 @@ int pf_wbcqi_dl_run(module_id_t Mod_id,
     max_num_ue--;
 
     /* allocate as much as possible */
-    const int mcs = cqi_to_mcs[cqi];
+    int mcs = cqi_to_mcs[cqi];
+    // MCS cap
+    if (mcs > 20) mcs = 20;
     UE_info->eNB_UE_stats[CC_id][UE_id].dlsch_mcs1 = mcs;
     int req = find_nb_rb_DL(mcs,
                             UE_info->UE_template[CC_id][UE_id].dl_buffer_total,
@@ -885,7 +894,7 @@ int rr_ul_run(module_id_t Mod_id,
         &tx_power);
 
     UE_template->pre_assigned_mcs_ul = mcs;
-    /* rb_idx_given >= MAX index: limit RBs to value in configuration file 
+    /* rb_idx_given >= MAX index: limit RBs to value in configuration file
      * RBs in the uplink.  */
     rb_idx_required[UE_id] = min(mac->max_ul_rb_index, rb_table_index);
     //UE_template->pre_allocated_nb_rb_ul = rb_table[rb_table_index];

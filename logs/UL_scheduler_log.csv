@@ -1,3 +1,1 @@
 timestamp_ms,frame,subframe,rnti,direction,nb_rb,rb_util(%),mcs,tbs_bytes,sdu_bytes,cqi,retx,harq_pid
-3826,382,6,3642,UL,3,10,63,0,0
-3834,383,4,3642,UL,3,3,22,60,0
