@@ -135,27 +135,58 @@ def start_servers(ues: list[UE], dry_run: bool):
     -D = daemon mode (runs in background inside the container)
     """
     print(f"\n{'─'*50}")
-    print(f"  [1/3] Starting iperf3 servers on {config.TRF_GEN_CONTAINER}")
+    print("[1/3] Starting iperf3 servers on each container")
     print(f"{'─'*50}")
 
-    if not dry_run and not check_container_running(config.TRF_GEN_CONTAINER):
-        print(
-            f"  ✗ Container '{config.TRF_GEN_CONTAINER}' is not running. Start the network first.")
-        sys.exit(1)
+    # if not dry_run and not check_container_running(config.TRF_GEN_CONTAINER):
+    #     print(
+    #         f"  ✗ Container '{config.TRF_GEN_CONTAINER}' is not running. Start the network first.")
+    #     sys.exit(1)
+    #
+    # for ue in ues:
+    #     print(f"  → Server for UE{ue.index} on port {ue.port} ...", end=" ")
+    #     docker_exec(
+    #         config.TRF_GEN_CONTAINER,
+    #         ["iperf3", "-s", "-B", config.TRF_GEN_IP, "-p", str(ue.port)],
+    #         detach=True,   # -D (daemon) is an iperf3 flag, not a Docker flag
+    #         dry_run=dry_run,
+    #     )
+    #     if not dry_run:
+    #         time.sleep(2)   # give it a moment to bind
+    #         # Verify it's actually listening before saying ✓
+    #         check = docker_exec(
+    #             config.TRF_GEN_CONTAINER,
+    #             ["pgrep", "-a", "iperf3"],
+    #             detach=False,
+    #             dry_run=False,
+    #         )
+    #         if check:
+    #             print("✓")
+    #         else:
+    #             print("✗ server not listening — check trf_gen container")
+    #             sys.exit(1)
 
     for ue in ues:
-        print(f"  → Server for UE{ue.index} on port {ue.port} ...", end=" ")
+        if not dry_run and not check_container_running(ue.container):
+            print(f"  ✗ Container '{ue.container}' is not running. Start the network first.")
+            sys.exit(1)
+
+        actual_tunnel_ip = get_tunnel_ip(ue.container) if not dry_run else ue.tunnel_ip
+        if not dry_run and not actual_tunnel_ip:
+            print(f"  ✗ No tunnel interface found on {ue.container} — is it attached?")
+            sys.exit(1)
+
+        print(f"  → Server on UE{ue.index} ({actual_tunnel_ip}) port {ue.port} ...", end=" ")
         docker_exec(
-            config.TRF_GEN_CONTAINER,
-            ["iperf3", "-s", "-B", config.TRF_GEN_IP, "-p", str(ue.port)],
-            detach=True,   # -D (daemon) is an iperf3 flag, not a Docker flag
+            ue.container,                                          # ← UE container
+            ["iperf3", "-s", "-B", actual_tunnel_ip, "-p", str(ue.port)],  # ← tunnel IP
+            detach=True,
             dry_run=dry_run,
         )
         if not dry_run:
-            time.sleep(2)   # give it a moment to bind
-            # Verify it's actually listening before saying ✓
+            time.sleep(2)
             check = docker_exec(
-                config.TRF_GEN_CONTAINER,
+                ue.container,                                      # ← UE container
                 ["pgrep", "-a", "iperf3"],
                 detach=False,
                 dry_run=False,
@@ -163,7 +194,7 @@ def start_servers(ues: list[UE], dry_run: bool):
             if check:
                 print("✓")
             else:
-                print("✗ server not listening — check trf_gen container")
+                print(f"✗ server not listening on {ue.container}")
                 sys.exit(1)
 
 
@@ -182,36 +213,66 @@ def start_clients(ues: list[UE], bandwidth: str, duration: int, dry_run: bool):
     --logfile = save results inside the container for later collection
     """
     print(f"\n{'─'*50}")
-    print(f"  [2/3] Starting iperf3 clients")
+    print(f"  [2/3] Starting iperf3 clients on {config.TRF_GEN_CONTAINER}")
     print(f"{'─'*50}")
 
+    # for ue in ues:
+    #     if not dry_run and not check_container_running(ue.container):
+    #         print(f"  ✗ Container '{ue.container}' is not running — skipping.")
+    #         continue
+    #     # Discover the actual tunnel IP at runtime
+    #     actual_tunnel_ip = get_tunnel_ip(
+    #         ue.container) if not dry_run else ue.tunnel_ip
+    #     if not dry_run and not actual_tunnel_ip:
+    #         print(
+    #             f"  ✗ No tunnel interface found on {ue.container} — is it attached?")
+    #         continue
+    #
+    #     print(
+    #         f"  → UE{ue.index} (actual tunnel: {actual_tunnel_ip}) → {config.TRF_GEN_IP}:{ue.port} ...", end=" ")
+    #
+    #     log_path = f"/tmp/iperf3_ue{ue.index}.txt"
+    #
+    #     docker_exec(
+    #         ue.container,
+    #         [
+    #             "iperf3",
+    #             "-c", config.TRF_GEN_IP,
+    #             "-B", actual_tunnel_ip,
+    #             "-u",
+    #             "-b", bandwidth,
+    #             "-t", str(duration),
+    #             "-R",
+    #             "-p", str(ue.port),
+    #             "--logfile", log_path,
+    #         ],
+    #         detach=True,
+    #         dry_run=dry_run,
+    #     )
+    #     if not dry_run:
+    #         print("✓")
+
     for ue in ues:
-        if not dry_run and not check_container_running(ue.container):
-            print(f"  ✗ Container '{ue.container}' is not running — skipping.")
-            continue
-        # Discover the actual tunnel IP at runtime
-        actual_tunnel_ip = get_tunnel_ip(
-            ue.container) if not dry_run else ue.tunnel_ip
+        actual_tunnel_ip = get_tunnel_ip(ue.container) if not dry_run else ue.tunnel_ip
         if not dry_run and not actual_tunnel_ip:
-            print(
-                f"  ✗ No tunnel interface found on {ue.container} — is it attached?")
+            print(f"  ✗ No tunnel interface found on {ue.container} — is it attached?")
             continue
 
         print(
-            f"  → UE{ue.index} (actual tunnel: {actual_tunnel_ip}) → {config.TRF_GEN_IP}:{ue.port} ...", end=" ")
+            f"  → trf_gen → UE{ue.index} ({actual_tunnel_ip}):{ue.port} ...", end=" ")
 
         log_path = f"/tmp/iperf3_ue{ue.index}.txt"
 
         docker_exec(
-            ue.container,
+            config.TRF_GEN_CONTAINER,       # ← client runs on trf_gen
             [
                 "iperf3",
-                "-c", config.TRF_GEN_IP,
-                "-B", actual_tunnel_ip,
+                "-c", actual_tunnel_ip,     # ← connect TO the UE tunnel IP
                 "-u",
-                "-b", bandwidth,
+                "-b", bandwidth,            # ← now honored: trf_gen is the sender
                 "-t", str(duration),
-                "-R",
+                # NO -R
+                # NO -B (trf_gen doesn't have a tunnel IP)
                 "-p", str(ue.port),
                 "--logfile", log_path,
             ],
@@ -253,7 +314,8 @@ def wait_and_collect(ues: list[UE], duration: int, dry_run: bool):
         log_path = f"/tmp/iperf3_ue{ue.index}.txt"
         print(f"\n  ── UE{ue.index} | {ue.container} ({ue.tunnel_ip}) ──")
 
-        output = docker_exec(ue.container, ["cat", log_path], dry_run=False)
+        # output = docker_exec(ue.container, ["cat", log_path], dry_run=False)
+        output = docker_exec(config.TRF_GEN_CONTAINER, ["cat", log_path], dry_run=False)
 
         if output:
             # Highlight the summary line (iperf3 ends with a line containing "sender" or "receiver")

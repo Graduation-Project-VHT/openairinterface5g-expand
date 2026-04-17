@@ -7,6 +7,7 @@
  */
 
 #include "scheduler_log.h"
+#include <stdint.h>
 #include <stdio.h>
 #define _GNU_SOURCE
 
@@ -704,6 +705,28 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
       eNB_UE_stats->total_rbs_used_retx += nb_rb;
       eNB_UE_stats->dlsch_mcs2 = eNB_UE_stats->dlsch_mcs1;
       eNB_UE_stats->TBS = TBS;
+
+      // DL Scheduler logging after mcs
+      if (DL_scheduler_csv && nb_rb > 0) {
+        // RB ultilization
+        const float rb_util = (float)nb_rb / N_RB_DL * 100;
+        fprintf(DL_scheduler_csv,
+                "%ld,%d,%d,%x,DL,%d,%0.2f,%d,%d,%d,%d,%d,%d\n",
+                (long)(frameP * 10 + subframeP),
+                frameP,
+                subframeP,
+                rnti,
+                nb_rb,
+                rb_util,
+                ue_template->oldmcs1[harq_pid],
+                TBS,
+                0, // Retransmission don't fetch new MAC SDU
+                ue_sched_ctrl->dl_cqi[0],
+                1,
+                harq_pid);
+        fflush(DL_scheduler_csv);
+      }
+
     } else {
       // Now check RLC information to compute number of required RBs
       // get maximum TBS size for RLC request
@@ -824,6 +847,7 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
         // Assume RAH format 2
         int mcs = eNB_UE_stats->dlsch_mcs1;
 
+
         /* TODO make special function */
         // decrease mcs until TBS falls below required length
         while ((TBS > sdu_length_total + header_length_total + ta_len) && (mcs > 0)) {
@@ -832,7 +856,7 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
         }
 
         // if we have decreased too much or we don't have enough RBs, increase MCS
-        while (TBS < sdu_length_total + header_length_total + ta_len && mcs < 28) {
+        while (TBS < sdu_length_total + header_length_total + ta_len && mcs < 20) {
           // the second part of this condition is useless since dl_pow_off is
           // always 2?
           //&& ((ue_sched_ctrl->dl_pow_off[CC_id] > 0 && mcs < 28) || (ue_sched_ctrl->dl_pow_off[CC_id] == 0 && mcs <= 15))) {
@@ -841,19 +865,24 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
         }
 
         // DL Scheduler logging after mcs
-        if (scheduler_csv && nb_rb > 0) {
-          fprintf(scheduler_csv,
-                  "%ld,%d,%d,%x,DL,%d,%d,%d,%d,%d\n",
+        if (DL_scheduler_csv && nb_rb > 0) {
+          // RB ultilization
+          const float rb_util = (float)nb_rb / N_RB_DL * 100;
+          fprintf(DL_scheduler_csv,
+                  "%ld,%d,%d,%x,DL,%d,%0.2f,%d,%d,%d,%d,%d,%d\n",
                   (long)(frameP * 10 + subframeP),
                   frameP,
                   subframeP,
                   rnti,
                   nb_rb,
+                  rb_util,
                   mcs,
                   TBS,
+                  sdu_length_total,
                   ue_sched_ctrl->dl_cqi[0],
-                  0);
-          fflush(scheduler_csv);
+                  0,
+                  harq_pid);
+          fflush(DL_scheduler_csv);
         }
 
         LOG_D(MAC,
