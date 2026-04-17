@@ -124,6 +124,8 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
     eNB_UE_stats = &pre_scd_eNB_UE_stats[CC_id][UE_id];
     eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
 
+    if (eNB_UE_stats->dlsch_mcs1 > 20) eNB_UE_stats->dlsch_mcs1 = 20;
+
     if (UE_template.dl_buffer_total > 0) {
       nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs1, UE_template.dl_buffer_total, N_RB_DL, step_size);
     }
@@ -723,6 +725,7 @@ static void assign_rbs_required_fairRR(
       CC_id = UE_info->ordered_CCids[n][UE_id];
       eNB_UE_stats = &UE_info->eNB_UE_stats[CC_id][UE_id];
       eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
+      if (eNB_UE_stats->dlsch_mcs1 > 20) eNB_UE_stats->dlsch_mcs1 = 20;
     }
 
     // provide the list of CCs sorted according to MCS
@@ -1279,6 +1282,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
       } else {
         eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
       }
+      if (eNB_UE_stats->dlsch_mcs1 > 20) eNB_UE_stats->dlsch_mcs1 = 20;
 
       //eNB_UE_stats->dlsch_mcs1 = cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
 

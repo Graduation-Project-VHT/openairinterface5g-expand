@@ -865,6 +865,14 @@ int rr_ul_run(module_id_t Mod_id,
     }
 
     const int B = cmax(UE_template->estimated_ul_buffer - UE_template->scheduled_ul_bytes, 0);
+
+    // BSR debug
+    // LOG_I(MAC, "[UL pre] UE %d: estimated_ul_buffer=%d scheduled_ul_bytes=%d B=%d\n",
+    //       UE_id,
+    //       UE_template->estimated_ul_buffer,
+    //       UE_template->scheduled_ul_bytes,
+    //       B);
+
     const int UE_to_be_scheduled = UE_is_to_be_scheduled(Mod_id, CC_id, UE_id);
     if (B == 0 && !UE_to_be_scheduled)
       continue;

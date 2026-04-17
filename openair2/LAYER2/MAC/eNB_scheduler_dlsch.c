@@ -864,15 +864,6 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
           TBS = get_TBS_DL(mcs, nb_rb);
         }
 
-
-        // Cap MCS to prevent Turbo decoder failures in RFSim
-        // High MCS (e.g. 28 = 64QAM CR~0.93) causes consistent NACK in RFSim
-        // because the simulated channel still applies noise constraints
-        if (mcs > 16) {
-          mcs = 16;
-          TBS = get_TBS_DL(mcs, nb_rb);
-        }
-
         // DL Scheduler logging after mcs
         if (DL_scheduler_csv && nb_rb > 0) {
           // RB ultilization
