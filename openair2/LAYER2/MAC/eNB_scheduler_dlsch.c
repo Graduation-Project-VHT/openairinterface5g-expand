@@ -724,7 +724,7 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
                 ue_sched_ctrl->dl_cqi[0],
                 1,
                 harq_pid);
-        fflush(DL_scheduler_csv);
+        // fflush(DL_scheduler_csv); Tốc độ ghi ổ cứng tốn vài ms (mỗi TTI chạy lệnh này khiến process bị chậm đi --> bottlneck CPU)
       }
 
     } else {
@@ -882,7 +882,7 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
                   ue_sched_ctrl->dl_cqi[0],
                   0,
                   harq_pid);
-          fflush(DL_scheduler_csv);
+          // fflush(DL_scheduler_csv);
         }
 
         LOG_D(MAC,

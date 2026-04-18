@@ -101,28 +101,6 @@ int max_ci_dl_run(module_id_t Mod_id, int CC_id, int frame, int subframe,
 
             for (rbg++; rbg < N_RBG && !rbgalloc_mask[rbg]; rbg++); 
         }
-
-        if (allocated_rbs > 0 && scheduler_csv != NULL) {
-            uint16_t rnti = UE_info->UE_template[CC_id][best_ue].rnti;
-            int tbs_bytes = get_TBS_DL(mcs, allocated_rbs);
-            uint32_t timestamp_ms = (frame * 10) + subframe; 
-            
-            // Viết tách bạch 10 format % tương ứng với 10 biến truyền vào
-            fprintf(scheduler_csv, "%u,%d,%d,%x,%s,%d,%d,%d,%d,%d\n",
-                    timestamp_ms,    // 1. timestamp_ms
-                    frame,           // 2. frame
-                    subframe,        // 3. subframe
-                    rnti,            // 4. rnti
-                    "DL",            // 5. direction (Chuỗi "DL" cho Downlink)
-                    allocated_rbs,   // 6. nb_rb (Số lượng Resource Block)
-                    mcs,             // 7. mcs
-                    tbs_bytes,       // 8. tbs_bytes
-                    max_cqi,         // 9. cqi
-                    0);              // 10. retx (0 = Truyền mới, không phải retransmission)
-            
-            // ÉP GHI XUỐNG Ổ CỨNG NGAY LẬP TỨC (Bắt buộc phải có khi chạy Docker)
-            fflush(scheduler_csv); 
-        }
         max_num_ue--;
     }
     return n_rbg_sched; 
