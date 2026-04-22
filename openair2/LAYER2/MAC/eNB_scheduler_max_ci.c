@@ -84,8 +84,6 @@ int max_ci_dl_run(module_id_t Mod_id, int CC_id, int frame, int subframe,
         
         int req_rbs = find_nb_rb_DL(mcs, max_buffer, n_rbg_sched * RBGsize, RBGsize);
 
-        int allocated_rbs = 0; // <--- THÊM Ở ĐÂY: Khai báo biến đếm số RB cấp được
-
         while (req_rbs > 0 && n_rbg_sched > 0 && rbg < N_RBG) {
             UE_info->UE_sched_ctrl[best_ue].rballoc_sub_UE[CC_id][rbg] = 1; 
             rbgalloc_mask[rbg] = 0; 
