@@ -124,6 +124,8 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
     eNB_UE_stats = &pre_scd_eNB_UE_stats[CC_id][UE_id];
     eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
 
+    if (eNB_UE_stats->dlsch_mcs1 > 20) eNB_UE_stats->dlsch_mcs1 = 20;
+
     if (UE_template.dl_buffer_total > 0) {
       nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs1, UE_template.dl_buffer_total, N_RB_DL, step_size);
     }
@@ -723,6 +725,7 @@ static void assign_rbs_required_fairRR(
       CC_id = UE_info->ordered_CCids[n][UE_id];
       eNB_UE_stats = &UE_info->eNB_UE_stats[CC_id][UE_id];
       eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
+      if (eNB_UE_stats->dlsch_mcs1 > 20) eNB_UE_stats->dlsch_mcs1 = 20;
     }
 
     // provide the list of CCs sorted according to MCS
@@ -1279,6 +1282,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
       } else {
         eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
       }
+      if (eNB_UE_stats->dlsch_mcs1 > 20) eNB_UE_stats->dlsch_mcs1 = 20;
 
       //eNB_UE_stats->dlsch_mcs1 = cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
 
@@ -1803,7 +1807,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                   (sdu_length_total + header_len_dcch +
                    header_len_dtch + ta_len))
                  && (((ue_sched_ctl->dl_pow_off[CC_id] > 0)
-                      && (mcs < 28))
+                      && (mcs < 20))
                      || ((ue_sched_ctl->dl_pow_off[CC_id] == 0)
                          && (mcs <= 15)))) {
             mcs++;
@@ -2230,7 +2234,7 @@ void ulsch_scheduler_pre_ue_select_fairRR(
 
     if (mac_eNB_get_rrc_status(module_idP, rnti) == RRC_HO_EXECUTION) {
       aggregation = 4;
-      
+
         if(get_aggregation(get_bw_index(module_idP, CC_id),UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0)>4)
           aggregation = get_aggregation(get_bw_index(module_idP, CC_id),UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0);
     }else{
@@ -2416,7 +2420,7 @@ void ulsch_scheduler_pre_ue_select_fairRR(
       format_flag = 2;
       if (mac_eNB_get_rrc_status(module_idP, rnti) == RRC_HO_EXECUTION) {
         aggregation = 4;
-      
+
         if(get_aggregation(get_bw_index(module_idP, CC_id),UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0)>4)
           aggregation = get_aggregation(get_bw_index(module_idP, CC_id),UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0);
       }else {
@@ -2624,7 +2628,7 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
         int32_t framex10psubframe = UE_template->pusch_bler_calc_frame*10+UE_template->pusch_bler_calc_subframe;
         int pusch_bler_interval=50;
         double total_bler;
-        
+
         if(UE_info->UE_sched_ctrl[UE_id].pusch_rx_num[CC_id] == 0 && UE_info->UE_sched_ctrl[UE_id].pusch_rx_error_num[CC_id] == 0) {
           total_bler = 0;
         }
@@ -2666,7 +2670,7 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
           }
         }
         snr = UE_info->UE_sched_ctrl[UE_id].pusch_snr_avg[CC_id];
- 
+
         mcs = 20 - UE_info->UE_sched_ctrl[UE_id].mcs_offset[CC_id];
         if(mcs < 6) {
           mcs = 6;
@@ -2725,9 +2729,9 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
               UE_info->UE_template[CC_id][UE_id].pre_assigned_mcs_ul = mcs;
             }
             LOG_D(MAC,"[eNB %hu] frame %u subframe %u, UE %d/%x CC %d snr %hhu snr_inst %hd mcs %hhd mcs_offset %hhu bler %lf total_bler %lf ( %lu %lu ) rb_num %hhu phr_info %hhd tx_power %hd bsr %d estimated_ul_buffer %d scheduled_ul_bytes %d\n",
-                  module_idP,frameP,subframeP,UE_id,UE_RNTI(CC_id,UE_id),CC_id, snr, UE_info->UE_sched_ctrl[UE_id].pusch_snr[CC_id], mcs, UE_info->UE_sched_ctrl[UE_id].mcs_offset[CC_id], UE_info->UE_sched_ctrl[UE_id].pusch_bler[CC_id], 
+                  module_idP,frameP,subframeP,UE_id,UE_RNTI(CC_id,UE_id),CC_id, snr, UE_info->UE_sched_ctrl[UE_id].pusch_snr[CC_id], mcs, UE_info->UE_sched_ctrl[UE_id].mcs_offset[CC_id], UE_info->UE_sched_ctrl[UE_id].pusch_bler[CC_id],
                   total_bler, UE_info->UE_sched_ctrl[UE_id].pusch_rx_num[CC_id], UE_info->UE_sched_ctrl[UE_id].pusch_rx_error_num[CC_id], rb_table[rb_table_index-1], UE_template->phr_info, tx_power, bytes_to_schedule, UE_template->estimated_ul_buffer, UE_template->scheduled_ul_bytes);
-            
+
           } else {
             if (mac_eNB_get_rrc_status(module_idP,UE_RNTI(module_idP, UE_id)) < RRC_CONNECTED) {
               // assigne RBS( 6 RBs)
@@ -2740,7 +2744,7 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
               first_rb[CC_id] = first_rb[CC_id] + 5;
               UE_info->UE_template[CC_id][UE_id].pre_allocated_nb_rb_ul = 5;
               UE_info->UE_template[CC_id][UE_id].pre_allocated_rb_table_index_ul = 4;
-              UE_info->UE_template[CC_id][UE_id].pre_assigned_mcs_ul = 10; 
+              UE_info->UE_template[CC_id][UE_id].pre_assigned_mcs_ul = 10;
             }
           }
         } else if ( ulsch_ue_select[CC_id].list[ulsch_ue_num].ue_priority  == SCH_UL_INACTIVE ) {
@@ -2890,8 +2894,8 @@ schedule_ulsch_fairRR(module_id_t module_idP, frame_t frameP,
                            cc->radioResourceConfigCommon->prach_Config.prach_ConfigInfo.prach_ConfigIndex,
                            sched_frame,sched_subframe)==1) {
       ulsch_ue_select[CC_id].list[ulsch_ue_select[CC_id].ue_num].ue_priority = SCH_UL_PRACH;
-      ulsch_ue_select[CC_id].list[ulsch_ue_select[CC_id].ue_num].start_rb = 
-           get_prach_prb_offset(cc->tdd_Config!=NULL ? 1 : 0, 
+      ulsch_ue_select[CC_id].list[ulsch_ue_select[CC_id].ue_num].start_rb =
+           get_prach_prb_offset(cc->tdd_Config!=NULL ? 1 : 0,
                                 cc->tdd_Config!=NULL ? cc->tdd_Config->subframeAssignment : 0,
                                 to_prb(cc->ul_Bandwidth),
                                 cc->radioResourceConfigCommon->prach_Config.prach_ConfigInfo.prach_ConfigIndex,
