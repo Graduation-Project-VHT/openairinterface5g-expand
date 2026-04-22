@@ -47,6 +47,8 @@ extern RAN_CONTEXT_t RC;
 extern int g_mlwdf_delay[];
 extern float g_mlwdf_thr[];
 extern float g_mlwdf_score[];
+extern float g_ue_qos_alpha[];
+extern int   g_ue_cqi_profile[];
 
 mac_rlc_am_muilist_t rlc_am_mui;
 
@@ -846,21 +848,23 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
 
         // DL Scheduler logging after mcs
         if (scheduler_csv && nb_rb > 0) {
-            fprintf(scheduler_csv,
-                    "%ld,%d,%d,%x,DL,%d,%d,%d,%d,%d,%d,%.2f,%.2f\n",
-                    (long)(frameP * 10 + subframeP),
-                    frameP,
-                    subframeP,
-                    rnti,
-                    nb_rb,
-                    mcs,
-                    TBS,
-                    ue_sched_ctrl->dl_cqi[0],
-                    0,
-                    g_mlwdf_delay[UE_id], // Lấy trễ từ MLWDF
-                    g_mlwdf_thr[UE_id],   // Lấy băng thông TB từ MLWDF
-                    g_mlwdf_score[UE_id]); // Lấy điểm số từ MLWDF
-            fflush(scheduler_csv);
+          fprintf(scheduler_csv,
+                  "%ld,%d,%d,%x,DL,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.1f,%d\n",
+                  (long)(frameP * 10 + subframeP),
+                  frameP,
+                  subframeP,
+                  rnti,
+                  nb_rb,
+                  mcs,
+                  TBS,
+                  ue_sched_ctrl->dl_cqi[0], // Đây là CQI thực tế đang dao động (từ 3 đến 15)
+                  0,
+                  g_mlwdf_delay[UE_id],
+                  g_mlwdf_thr[UE_id],
+                  g_mlwdf_score[UE_id],
+                  g_ue_qos_alpha[UE_id],    // [CỘT MỚI 1] Lấy trọng số dịch vụ
+                  g_ue_cqi_profile[UE_id]); // [CỘT MỚI 2] Lấy profile sóng (0: Tốt, 1: Khá, 2: Kém)
+          fflush(scheduler_csv);
         }
 
         LOG_D(MAC,
