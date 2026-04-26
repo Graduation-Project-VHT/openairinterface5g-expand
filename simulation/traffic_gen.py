@@ -16,6 +16,10 @@ import signal
 import subprocess
 import sys
 import time
+import json
+import os
+import urllib.request
+import urllib.error
 from dataclasses import dataclass
 
 import config
@@ -352,6 +356,12 @@ Examples:
                         help=f"Test duration in seconds (default: {config.DEFAULT_DURATION})")
     parser.add_argument("--dry-run",   action="store_true",
                         help="Print all docker commands without executing them")
+    parser.add_argument("--label",
+                        type=str, default="",
+                        help="Descriptive label for this run stored with the CSV "
+                             "(e.g. 'round_robin_3ue', 'maxci_test1')")
+    parser.add_argument("--no-upload", action="store_true",
+                        help="Skip uploading the CSV to the server after the run")
     return parser.parse_args()
 
 
@@ -365,6 +375,66 @@ def cleanup(ues: list[UE]):
     docker_exec(config.TRF_GEN_CONTAINER, ["pkill", "-f", "iperf3"],
                 detach=False, dry_run=False)
     print("  ✓ Done")
+
+def upload_csv(label: str, dry_run: bool):
+    """
+    Upload the DL scheduler CSV to the remote CSV server after the run.
+    Reads connection details from environment variables so each team
+    member can configure their own without touching this file.
+    """
+    server_url = os.environ.get("CSV_SERVER_URL", "https://csv.lukaxzs.myaddr.io")
+    api_key    = os.environ.get("CSV_API_KEY",    "lte_team_2026")
+    member     = os.environ.get("LTE_SIM_MEMBER", "kiet")
+    csv_file   = os.environ.get("CSV_FILE",
+                     "../logs/DL_scheduler_log.csv")
+
+    print(f"\n{'─'*50}")
+    print("  [4/4] Uploading CSV to server")
+    print(f"{'─'*50}")
+
+    if dry_run:
+        print(f"  [DRY RUN] Would upload {csv_file} → {server_url}")
+        return
+
+    if not os.path.exists(csv_file):
+        print(f"  ✗ CSV file not found: {csv_file}")
+        print("  Skipping upload.")
+        return
+
+    size_kb = os.path.getsize(csv_file) / 1024
+    print(f"  → Uploading {csv_file} ({size_kb:.1f} KB) as member={member} label={label or 'none'} ...")
+
+    params  = f"member={member}"
+    if label:
+        params += f"&label={label}"
+    url = f"{server_url}/upload?{params}"
+
+    try:
+        with open(csv_file, "rb") as f:
+            data = f.read()
+
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={
+                "Content-Type": "text/csv",
+                "X-API-Key":    api_key,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            body = json.loads(resp.read().decode())
+            file_url = body.get("url", "")
+            print(f"  ✓ Uploaded successfully ({body.get('size_kb', '?')} KB)")
+            print(f"  Grafana datasource URL:")
+            print(f"    {server_url}{file_url}")
+
+    except urllib.error.HTTPError as e:
+        print(f"  ✗ Upload failed: HTTP {e.code} — {e.reason}")
+    except urllib.error.URLError as e:
+        print(f"  ✗ Upload failed: {e.reason}")
+    except Exception as e:
+        print(f"  ✗ Upload failed: {e}")
 
 
 def main():
@@ -393,10 +463,21 @@ def main():
     for ue in ues:
         print(f"  {ue}")
 
+    def _handle_exit(sig, frame):
+        cleanup(ues)
+        if not args.dry_run and not args.no_upload:
+            print("\n  (uploading CSV from partial run...)")
+            upload_csv(args.label, dry_run=False)
+        sys.exit(0)
+
     start_servers(ues, dry_run=args.dry_run)
     start_clients(ues, bandwidth=args.bandwidth,
                   duration=args.duration, dry_run=args.dry_run)
     wait_and_collect(ues, duration=args.duration, dry_run=args.dry_run)
+
+    # Upload CSV after everything finishes
+    if not args.no_upload:
+        upload_csv(args.label, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

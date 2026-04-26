@@ -3826,14 +3826,14 @@ void extract_harq(module_id_t mod_idP,
           }
 
           // LOG_D(MAC, "In extract_harq(): pdu[0] = %d for harq_pid = %d\n", pdu[0], harq_pid);
-          LOG_I(MAC,
-                "[HARQ_DEBUG] frame %d sf %d rnti %x harq_pid %d pdu[0]=%d "
-                "(1=ACK 2=NACK 4=DTX)\n",
-                frameP,
-                subframeP,
-                rnti,
-                harq_pid,
-                pdu[0]);
+          // LOG_I(MAC,
+          //       "[HARQ_DEBUG] frame %d sf %d rnti %x harq_pid %d pdu[0]=%d "
+          //       "(1=ACK 2=NACK 4=DTX)\n",
+          //       frameP,
+          //       subframeP,
+          //       rnti,
+          //       harq_pid,
+          //       pdu[0]);
 
           if (pdu[0] == 1) { // ACK
             sched_ctl->round[CC_idP][harq_pid] = 8; // release HARQ process
