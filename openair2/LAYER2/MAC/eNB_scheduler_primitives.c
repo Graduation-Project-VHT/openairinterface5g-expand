@@ -2006,8 +2006,14 @@ void dump_ue_list(UE_list_t *listP)
 inline void add_ue_list(UE_list_t *listP, int UE_id)
 {
   int *cur = &listP->head;
-  while (*cur >= 0)
+  while (*cur >= 0) {
+    if (*cur == UE_id) {
+      // UE_id already in list — do NOT add again
+      LOG_W(MAC, "[add_ue_list] UE_id %d already in list, skipping\n", UE_id);
+      return;
+    }
     cur = &listP->next[*cur];
+  }
   *cur = UE_id;
   LOG_D(MAC, "added UE %d in UE list\n", UE_id);
 }
@@ -2048,6 +2054,15 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP, int harq_pidP, uin
   int UE_id;
   int i, j;
   UE_info_t *UE_info = &RC.mac[mod_idP]->UE_info;
+
+  // Check if this RNTI already has a slot in the UE list.
+  // If so, return the existing UE_id rather than creating a duplicate.
+  int existing_id = find_UE_id(mod_idP, rntiP);
+  if (existing_id >= 0) {
+    LOG_W(MAC, "[add_new_ue] RNTI 0x%04x already exists as UE_id %d — skipping duplicate add\n", rntiP, existing_id);
+    return existing_id;
+  }
+
   LOG_D(MAC, "[eNB %d, CC_id %d] Adding UE with rnti %x (prev. num_UEs %d)\n", mod_idP, cc_idP, rntiP, UE_info->num_UEs);
 
   for (i = 0; i < MAX_MOBILES_PER_ENB; i++) {
