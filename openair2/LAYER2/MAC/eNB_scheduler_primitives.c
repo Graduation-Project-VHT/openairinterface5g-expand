@@ -2055,10 +2055,14 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP, int harq_pidP, uin
   int i, j;
   UE_info_t *UE_info = &RC.mac[mod_idP]->UE_info;
 
+  // Atomic check-then-act: lock ONLY for this critical section
+  pthread_mutex_lock(&RC.mac[mod_idP]->UE_info.UE_list_mutex);
+
   // Check if this RNTI already has a slot in the UE list.
   // If so, return the existing UE_id rather than creating a duplicate.
   int existing_id = find_UE_id(mod_idP, rntiP);
   if (existing_id >= 0) {
+      pthread_mutex_unlock(&RC.mac[mod_idP]->UE_info.UE_list_mutex);
     LOG_W(MAC, "[add_new_ue] RNTI 0x%04x already exists as UE_id %d — skipping duplicate add\n", rntiP, existing_id);
     return existing_id;
   }
@@ -2081,6 +2085,9 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP, int harq_pidP, uin
     UE_info->num_UEs++;
     UE_info->active[UE_id] = true;
     add_ue_list(&UE_info->list, UE_id);
+
+    pthread_mutex_unlock(&RC.mac[mod_idP]->UE_info.UE_list_mutex);
+
     dump_ue_list(&UE_info->list);
     pp_impl_param_t *dl = &RC.mac[mod_idP]->pre_processor_dl;
     if (dl->slices) // inform slice implementation about new UE
@@ -2116,8 +2123,11 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP, int harq_pidP, uin
     }
     eNB_dlsch_info[mod_idP][cc_idP][UE_id].status = S_DL_NONE;
     LOG_D(MAC, "[eNB %d] Add UE_id %d on Primary CC_id %d: rnti %x\n", mod_idP, UE_id, cc_idP, rntiP);
+
     return (UE_id);
   }
+
+  pthread_mutex_unlock(&RC.mac[mod_idP]->UE_info.UE_list_mutex);
 
   LOG_E(MAC, "error in add_new_ue(), could not find space in UE_list, Dumping UE list\n");
   dump_ue_list(&UE_info->list);

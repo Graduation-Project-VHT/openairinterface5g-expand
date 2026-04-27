@@ -110,6 +110,8 @@ void init_UE_info(UE_info_t *UE_info)
   memset(UE_info->eNB_UE_stats, 0, sizeof(UE_info->eNB_UE_stats));
   memset(UE_info->UE_sched_ctrl, 0, sizeof(UE_info->UE_sched_ctrl));
   memset(UE_info->active, 0, sizeof(UE_info->active));
+
+  pthread_mutex_init(&UE_info->UE_list_mutex, NULL);
 }
 
 void mac_top_init_eNB(void)
