@@ -16,6 +16,10 @@ import signal
 import subprocess
 import sys
 import time
+import json
+import os
+import urllib.request
+import urllib.error
 from dataclasses import dataclass
 
 import config
@@ -135,27 +139,58 @@ def start_servers(ues: list[UE], dry_run: bool):
     -D = daemon mode (runs in background inside the container)
     """
     print(f"\n{'─'*50}")
-    print(f"  [1/3] Starting iperf3 servers on {config.TRF_GEN_CONTAINER}")
+    print("[1/3] Starting iperf3 servers on each container")
     print(f"{'─'*50}")
 
-    if not dry_run and not check_container_running(config.TRF_GEN_CONTAINER):
-        print(
-            f"  ✗ Container '{config.TRF_GEN_CONTAINER}' is not running. Start the network first.")
-        sys.exit(1)
+    # if not dry_run and not check_container_running(config.TRF_GEN_CONTAINER):
+    #     print(
+    #         f"  ✗ Container '{config.TRF_GEN_CONTAINER}' is not running. Start the network first.")
+    #     sys.exit(1)
+    #
+    # for ue in ues:
+    #     print(f"  → Server for UE{ue.index} on port {ue.port} ...", end=" ")
+    #     docker_exec(
+    #         config.TRF_GEN_CONTAINER,
+    #         ["iperf3", "-s", "-B", config.TRF_GEN_IP, "-p", str(ue.port)],
+    #         detach=True,   # -D (daemon) is an iperf3 flag, not a Docker flag
+    #         dry_run=dry_run,
+    #     )
+    #     if not dry_run:
+    #         time.sleep(2)   # give it a moment to bind
+    #         # Verify it's actually listening before saying ✓
+    #         check = docker_exec(
+    #             config.TRF_GEN_CONTAINER,
+    #             ["pgrep", "-a", "iperf3"],
+    #             detach=False,
+    #             dry_run=False,
+    #         )
+    #         if check:
+    #             print("✓")
+    #         else:
+    #             print("✗ server not listening — check trf_gen container")
+    #             sys.exit(1)
 
     for ue in ues:
-        print(f"  → Server for UE{ue.index} on port {ue.port} ...", end=" ")
+        if not dry_run and not check_container_running(ue.container):
+            print(f"  ✗ Container '{ue.container}' is not running. Start the network first.")
+            sys.exit(1)
+
+        actual_tunnel_ip = get_tunnel_ip(ue.container) if not dry_run else ue.tunnel_ip
+        if not dry_run and not actual_tunnel_ip:
+            print(f"  ✗ No tunnel interface found on {ue.container} — is it attached?")
+            sys.exit(1)
+
+        print(f"  → Server on UE{ue.index} ({actual_tunnel_ip}) port {ue.port} ...", end=" ")
         docker_exec(
-            config.TRF_GEN_CONTAINER,
-            ["iperf3", "-s", "-B", config.TRF_GEN_IP, "-p", str(ue.port)],
-            detach=True,   # -D (daemon) is an iperf3 flag, not a Docker flag
+            ue.container,                                          # ← UE container
+            ["iperf3", "-s", "-B", actual_tunnel_ip, "-p", str(ue.port)],  # ← tunnel IP
+            detach=True,
             dry_run=dry_run,
         )
         if not dry_run:
-            time.sleep(2)   # give it a moment to bind
-            # Verify it's actually listening before saying ✓
+            time.sleep(2)
             check = docker_exec(
-                config.TRF_GEN_CONTAINER,
+                ue.container,                                      # ← UE container
                 ["pgrep", "-a", "iperf3"],
                 detach=False,
                 dry_run=False,
@@ -163,7 +198,7 @@ def start_servers(ues: list[UE], dry_run: bool):
             if check:
                 print("✓")
             else:
-                print("✗ server not listening — check trf_gen container")
+                print(f"✗ server not listening on {ue.container}")
                 sys.exit(1)
 
 
@@ -182,36 +217,66 @@ def start_clients(ues: list[UE], bandwidth: str, duration: int, dry_run: bool):
     --logfile = save results inside the container for later collection
     """
     print(f"\n{'─'*50}")
-    print(f"  [2/3] Starting iperf3 clients")
+    print(f"  [2/3] Starting iperf3 clients on {config.TRF_GEN_CONTAINER}")
     print(f"{'─'*50}")
 
+    # for ue in ues:
+    #     if not dry_run and not check_container_running(ue.container):
+    #         print(f"  ✗ Container '{ue.container}' is not running — skipping.")
+    #         continue
+    #     # Discover the actual tunnel IP at runtime
+    #     actual_tunnel_ip = get_tunnel_ip(
+    #         ue.container) if not dry_run else ue.tunnel_ip
+    #     if not dry_run and not actual_tunnel_ip:
+    #         print(
+    #             f"  ✗ No tunnel interface found on {ue.container} — is it attached?")
+    #         continue
+    #
+    #     print(
+    #         f"  → UE{ue.index} (actual tunnel: {actual_tunnel_ip}) → {config.TRF_GEN_IP}:{ue.port} ...", end=" ")
+    #
+    #     log_path = f"/tmp/iperf3_ue{ue.index}.txt"
+    #
+    #     docker_exec(
+    #         ue.container,
+    #         [
+    #             "iperf3",
+    #             "-c", config.TRF_GEN_IP,
+    #             "-B", actual_tunnel_ip,
+    #             "-u",
+    #             "-b", bandwidth,
+    #             "-t", str(duration),
+    #             "-R",
+    #             "-p", str(ue.port),
+    #             "--logfile", log_path,
+    #         ],
+    #         detach=True,
+    #         dry_run=dry_run,
+    #     )
+    #     if not dry_run:
+    #         print("✓")
+
     for ue in ues:
-        if not dry_run and not check_container_running(ue.container):
-            print(f"  ✗ Container '{ue.container}' is not running — skipping.")
-            continue
-        # Discover the actual tunnel IP at runtime
-        actual_tunnel_ip = get_tunnel_ip(
-            ue.container) if not dry_run else ue.tunnel_ip
+        actual_tunnel_ip = get_tunnel_ip(ue.container) if not dry_run else ue.tunnel_ip
         if not dry_run and not actual_tunnel_ip:
-            print(
-                f"  ✗ No tunnel interface found on {ue.container} — is it attached?")
+            print(f"  ✗ No tunnel interface found on {ue.container} — is it attached?")
             continue
 
         print(
-            f"  → UE{ue.index} (actual tunnel: {actual_tunnel_ip}) → {config.TRF_GEN_IP}:{ue.port} ...", end=" ")
+            f"  → trf_gen → UE{ue.index} ({actual_tunnel_ip}):{ue.port} ...", end=" ")
 
         log_path = f"/tmp/iperf3_ue{ue.index}.txt"
 
         docker_exec(
-            ue.container,
+            config.TRF_GEN_CONTAINER,       # ← client runs on trf_gen
             [
                 "iperf3",
-                "-c", config.TRF_GEN_IP,
-                "-B", actual_tunnel_ip,
+                "-c", actual_tunnel_ip,     # ← connect TO the UE tunnel IP
                 "-u",
-                "-b", bandwidth,
+                "-b", bandwidth,            # ← now honored: trf_gen is the sender
                 "-t", str(duration),
-                "-R",
+                # NO -R
+                # NO -B (trf_gen doesn't have a tunnel IP)
                 "-p", str(ue.port),
                 "--logfile", log_path,
             ],
@@ -253,7 +318,8 @@ def wait_and_collect(ues: list[UE], duration: int, dry_run: bool):
         log_path = f"/tmp/iperf3_ue{ue.index}.txt"
         print(f"\n  ── UE{ue.index} | {ue.container} ({ue.tunnel_ip}) ──")
 
-        output = docker_exec(ue.container, ["cat", log_path], dry_run=False)
+        # output = docker_exec(ue.container, ["cat", log_path], dry_run=False)
+        output = docker_exec(config.TRF_GEN_CONTAINER, ["cat", log_path], dry_run=False)
 
         if output:
             # Highlight the summary line (iperf3 ends with a line containing "sender" or "receiver")
@@ -290,6 +356,12 @@ Examples:
                         help=f"Test duration in seconds (default: {config.DEFAULT_DURATION})")
     parser.add_argument("--dry-run",   action="store_true",
                         help="Print all docker commands without executing them")
+    parser.add_argument("--label",
+                        type=str, default="",
+                        help="Descriptive label for this run stored with the CSV "
+                             "(e.g. 'round_robin_3ue', 'maxci_test1')")
+    parser.add_argument("--no-upload", action="store_true",
+                        help="Skip uploading the CSV to the server after the run")
     return parser.parse_args()
 
 
@@ -303,6 +375,66 @@ def cleanup(ues: list[UE]):
     docker_exec(config.TRF_GEN_CONTAINER, ["pkill", "-f", "iperf3"],
                 detach=False, dry_run=False)
     print("  ✓ Done")
+
+def upload_csv(label: str, dry_run: bool):
+    """
+    Upload the DL scheduler CSV to the remote CSV server after the run.
+    Reads connection details from environment variables so each team
+    member can configure their own without touching this file.
+    """
+    server_url = os.environ.get("CSV_SERVER_URL", "https://csv.lukaxzs.myaddr.io")
+    api_key    = os.environ.get("CSV_API_KEY",    "lte_team_2026")
+    member     = os.environ.get("LTE_SIM_MEMBER", "kiet")
+    csv_file   = os.environ.get("CSV_FILE",
+                     "../logs/DL_scheduler_log.csv")
+
+    print(f"\n{'─'*50}")
+    print("  [4/4] Uploading CSV to server")
+    print(f"{'─'*50}")
+
+    if dry_run:
+        print(f"  [DRY RUN] Would upload {csv_file} → {server_url}")
+        return
+
+    if not os.path.exists(csv_file):
+        print(f"  ✗ CSV file not found: {csv_file}")
+        print("  Skipping upload.")
+        return
+
+    size_kb = os.path.getsize(csv_file) / 1024
+    print(f"  → Uploading {csv_file} ({size_kb:.1f} KB) as member={member} label={label or 'none'} ...")
+
+    params  = f"member={member}"
+    if label:
+        params += f"&label={label}"
+    url = f"{server_url}/upload?{params}"
+
+    try:
+        with open(csv_file, "rb") as f:
+            data = f.read()
+
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={
+                "Content-Type": "text/csv",
+                "X-API-Key":    api_key,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            body = json.loads(resp.read().decode())
+            file_url = body.get("url", "")
+            print(f"  ✓ Uploaded successfully ({body.get('size_kb', '?')} KB)")
+            print(f"  Grafana datasource URL:")
+            print(f"    {server_url}{file_url}")
+
+    except urllib.error.HTTPError as e:
+        print(f"  ✗ Upload failed: HTTP {e.code} — {e.reason}")
+    except urllib.error.URLError as e:
+        print(f"  ✗ Upload failed: {e.reason}")
+    except Exception as e:
+        print(f"  ✗ Upload failed: {e}")
 
 
 def main():
@@ -331,10 +463,21 @@ def main():
     for ue in ues:
         print(f"  {ue}")
 
+    def _handle_exit(sig, frame):
+        cleanup(ues)
+        if not args.dry_run and not args.no_upload:
+            print("\n  (uploading CSV from partial run...)")
+            upload_csv(args.label, dry_run=False)
+        sys.exit(0)
+
     start_servers(ues, dry_run=args.dry_run)
     start_clients(ues, bandwidth=args.bandwidth,
                   duration=args.duration, dry_run=args.dry_run)
     wait_and_collect(ues, duration=args.duration, dry_run=args.dry_run)
+
+    # Upload CSV after everything finishes
+    if not args.no_upload:
+        upload_csv(args.label, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":
