@@ -1,5 +1,6 @@
-#include <stdio.h>  // Thêm thư viện này để hỗ trợ fopen, fprintf, fclose
+#include <stdio.h>
 #include <stdlib.h>
+#include <time.h> // Added for random seed generation
 #include "eNB_scheduler_mlwdf.h"
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_proto.h"
@@ -10,51 +11,44 @@
 
 extern RAN_CONTEXT_t RC;
 
-// Khai báo hàm lập lịch gốc của OAI để gọi ở Giai đoạn 3
+// Declare the original OAI scheduling function to be called in Phase 3
 extern void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_frame_t subframeP);
 
 // ========================================================================
-// BIẾN TOÀN CỤC (Cầu nối ghi log & Lưu trữ Profile cố định cho UE)
+// GLOBAL VARIABLES (Log bridge & Fixed Profile Storage for UEs)
 // ========================================================================
 int g_mlwdf_delay[MAX_MOBILES_PER_ENB] = {0};
 float g_mlwdf_thr[MAX_MOBILES_PER_ENB] = {0.0};
 float g_mlwdf_score[MAX_MOBILES_PER_ENB] = {0.0};
 
-// Mảng lưu "Định mệnh" của từng UE khi vừa bật trạm eNB
+// Arrays storing the assigned profiles for each UE upon eNB startup
 float g_ue_qos_alpha[MAX_MOBILES_PER_ENB] = {0.0};
 int   g_ue_cqi_profile[MAX_MOBILES_PER_ENB] = {0};
 
 mlwdf_ue_stats_t mlwdf_stats[MAX_MOBILES_PER_ENB];
 
 // ========================================================================
-// HÀM KHỞI TẠO: Gán ngẫu nhiên Profile Dịch vụ & Sóng cho quy mô N UEs
+// INITIALIZATION FUNCTION: [TEST SCENARIO] Random QoS (5 Levels) & Random CQI
 // ========================================================================
 void init_mlwdf_scheduler(void) {
-    // ---------------------------------------------------------
-    // [TỰ ĐỘNG DỌN DẸP FILE LOG]
-    // Mở file ở chế độ "w" (write) để xóa sạch dữ liệu cũ
-    // và ghi dòng tiêu đề mới cho lần chạy mô phỏng này.
-    // ---------------------------------------------------------
-    FILE *f = fopen("scheduler_log.csv", "w");
+    // Automatically clean up the log file
+    FILE *f = fopen("DL_scheduler_log.csv", "w");
     if (f != NULL) {
         fprintf(f, "timestamp_ms,frame,subframe,rnti,direction,nb_rb,mcs,tbs_bytes,cqi,retx,hol_delay_ms,avg_thr_kbps,mlwdf_score,qos_alpha,cqi_profile\n");
         fclose(f);
     } else {
-        printf("[MAC-MLWDF] LỖI: Không thể tạo hoặc ghi đè file scheduler_log.csv!\n");
+        printf("[MAC-MLWDF] ERROR: Cannot create or overwrite DL_scheduler_log.csv!\n");
     }
 
-    // 5 Mức QoS Tiêu biểu trong mạng 4G/5G
-    float qos_pool[5] = {
-        3.0, // 1. VoIP / URLLC: Cực kỳ nhạy cảm với trễ (Ưu tiên tối thượng)
-        2.0, // 2. Video Call / Cloud Gaming: Rất nhạy cảm với trễ
-        1.2, // 3. Web Browsing / Social Media: Nhạy cảm trễ trung bình
-        0.8, // 4. File Transfer (FTP/HTTP): Chịu trễ tốt, cần thông lượng
-        0.4  // 5. Background / IoT Sensor: Không quan tâm trễ (Ưu tiên thấp nhất)
-    };
-
     printf("\n======================================================\n");
-    printf("[MAC-MLWDF] KHOI TAO BANG PROFILE QoS VA SONG CHO UE\n");
+    printf("[MAC-MLWDF] INITIALIZING TEST SCENARIO: 5 RANDOM QoS & RANDOM CQI\n");
     printf("======================================================\n");
+
+    // Seed the random number generator
+    srand(time(NULL));
+
+    // [NEW]: Define 5 possible QoS weights representing different service classes
+    float possible_qos[5] = {5.0, 3.0, 1.2, 0.5, 0.1};
 
     for (int i = 0; i < MAX_MOBILES_PER_ENB; i++) {
         mlwdf_stats[i].rnti = 0;
@@ -65,70 +59,32 @@ void init_mlwdf_scheduler(void) {
         g_mlwdf_thr[i] = 0.0;
         g_mlwdf_score[i] = 0.0;
 
-        // "Rút thăm" ngẫu nhiên 1 trong 5 dịch vụ cho Slot UE này
-        g_ue_qos_alpha[i] = qos_pool[rand() % 5];
+        // [NEW]: Randomly assign one of the 5 QoS Levels
+        int random_qos_index = rand() % 5;
+        g_ue_qos_alpha[i] = possible_qos[random_qos_index];
 
-        // "Rút thăm" ngẫu nhiên vị trí đứng của UE (Môi trường vô tuyến)
-        // 0: Đứng gần trạm (Sóng tốt)
-        // 1: Đứng giữa Cell (Sóng trung bình)
-        // 2: Đứng rìa Cell hoặc di chuyển nhanh (Sóng yếu)
+        // Randomly assign Radio Condition Profile (0: Center, 1: Mid, 2: Edge)
         g_ue_cqi_profile[i] = rand() % 3;
 
-        // In log để khi chạy eNB, dễ dàng theo dõi
-        printf("[MLWDF-INIT] Slot UE_ID %d | QoS Alpha: %.1f | Vung Song: %d\n", i, g_ue_qos_alpha[i], g_ue_cqi_profile[i]);
+        // Print initialization logs to confirm random assignment
+        printf("[MLWDF-INIT] Slot UE_ID %d | Random QoS Alpha: %.1f | Random CQI Profile: %d\n",
+               i, g_ue_qos_alpha[i], g_ue_cqi_profile[i]);
     }
     printf("======================================================\n\n");
 }
 
 // ========================================================================
-// [HÀM MỚI] Giả lập Hiệu ứng cái bóng (Shadowing/Fading)
+// Simulate Distance & Attenuation
 // ========================================================================
 void generate_dynamic_cqi(module_id_t module_idP) {
-    eNB_MAC_INST *eNB = RC.mac[module_idP];
-    UE_info_t *UE_info = &eNB->UE_info;
-    int CC_id = 0;
-
-    for (int ue_id = 0; ue_id < MAX_MOBILES_PER_ENB; ue_id++) {
-        if (UE_info->active[ue_id] == 1) {
-
-            uint8_t current_cqi = UE_info->UE_sched_ctrl[ue_id].dl_cqi[CC_id];
-            int profile = g_ue_cqi_profile[ue_id];
-
-            // Nếu CQI đang là lý tưởng (chưa bị nhiễu), thiết lập base theo Vùng sóng
-            if (current_cqi == 0 || current_cqi >= 15) {
-                if (profile == 0) current_cqi = 14;      // Vùng tốt
-                else if (profile == 1) current_cqi = 9;  // Vùng khá
-                else current_cqi = 5;                    // Vùng kém
-            }
-
-            // TẠO BƯỚC NHẢY FADING ngẫu nhiên (Delta: -1, 0, +1)
-            int delta = (rand() % 3) - 1;
-            int new_cqi = current_cqi + delta;
-
-            // Ép biên độ dao động để UE không thoát khỏi "Vùng sóng" của nó
-            if (profile == 0) {
-                if (new_cqi > 15) new_cqi = 15;
-                if (new_cqi < 12) new_cqi = 12;
-            } else if (profile == 1) {
-                if (new_cqi > 11) new_cqi = 11;
-                if (new_cqi < 7)  new_cqi = 7;
-            } else {
-                if (new_cqi > 6) new_cqi = 6;
-                if (new_cqi < 3) new_cqi = 3;
-            }
-
-            // Ghi đè CQI nhiễu vào Tầng MAC
-            UE_info->UE_sched_ctrl[ue_id].dl_cqi[CC_id] = new_cqi;
-        }
-    }
+    // Physical layer uses optimal transmission to prevent 100% BLER.
+    // Distance attenuation is simulated via Virtual Rate in Phase 1.
+    return;
 }
 
-// Hàm Lập lịch QoS Aware M-LWDF
+// QoS Aware M-LWDF Scheduling Function
 void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, sub_frame_t subframeP) {
 
-    // ========================================================================
-    // [THỦ THUẬT MỚI] LAZY INITIALIZATION
-    // ========================================================================
     static int is_mlwdf_initialized = 0;
     if (is_mlwdf_initialized == 0) {
         init_mlwdf_scheduler();
@@ -148,7 +104,7 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, s
     }
 
     // ========================================================================
-    // GIAI ĐOẠN 1: TÍNH TOÁN METRIC CHO TỪNG UE ĐANG HOẠT ĐỘNG
+    // PHASE 1: CALCULATE METRICS FOR EACH ACTIVE UE
     // ========================================================================
     for (ue_id = 0; ue_id < MAX_MOBILES_PER_ENB; ue_id++) {
 
@@ -158,19 +114,34 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, s
 
             UE_sched_ctrl_t *ue_sched_ctrl = &UE_info->UE_sched_ctrl[ue_id];
 
-            // 1. Tính tốc độ tức thời r_i(t)
+            // 1. Get real rate for actual physical data transmission
             uint8_t cqi = ue_sched_ctrl->dl_cqi[CC_id];
             if (cqi == 0) cqi = 5;
             uint8_t mcs = cqi_to_mcs[cqi];
-            uint32_t estimated_tbs = get_TBS_DL(mcs, 1);
-            current_sched_list[num_active_ues].inst_rate_kbps = estimated_tbs * 8.0;
+            uint32_t real_tbs = get_TBS_DL(mcs, 1);
 
-            // 2. Lấy thông lượng trung bình (EMA)
+            // =========================================================
+            // APPLY VIRTUAL RATE BASED ON RANDOMIZED PROFILE
+            // =========================================================
+            float virtual_rate = real_tbs * 8.0;
+            int profile = g_ue_cqi_profile[ue_id];
+
+            if (profile == 0) {
+                virtual_rate *= 1.0;  // Cell Center
+            } else if (profile == 1) {
+                virtual_rate *= 0.5;  // Cell Mid
+            } else if (profile == 2) {
+                virtual_rate *= 0.1;  // Cell Edge
+            }
+
+            current_sched_list[num_active_ues].inst_rate_kbps = virtual_rate;
+
+            // 2. Get average throughput (EMA)
             current_sched_list[num_active_ues].avg_throughput_kbps = mlwdf_stats[ue_id].avg_throughput_kbps;
             float R_avg = current_sched_list[num_active_ues].avg_throughput_kbps;
             if (R_avg <= 0.1) R_avg = 1.0;
 
-            // 3. Tính trễ (HoL Delay)
+            // 3. Calculate HoL (Head-of-Line) Delay
             mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(
                 module_idP, rnti, module_idP, frameP, subframeP,
                 ENB_FLAG_YES, MBMS_FLAG_NO, 3, 0, 0
@@ -189,13 +160,13 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, s
             if (delay_ms <= 0) delay_ms = 1;
             current_sched_list[num_active_ues].hol_delay_ms = delay_ms;
 
-            // 4. Tính điểm M-LWDF bằng Profile cố định đã cấp lúc khởi tạo trạm
+            // 4. Calculate M-LWDF score using Randomized QoS
             current_sched_list[num_active_ues].qos_weight_alpha = g_ue_qos_alpha[ue_id];
 
             current_sched_list[num_active_ues].mlwdf_metric =
                 current_sched_list[num_active_ues].qos_weight_alpha * ((float)current_sched_list[num_active_ues].hol_delay_ms / R_avg) * current_sched_list[num_active_ues].inst_rate_kbps;
 
-            // Lưu log CSV (Truyền giá trị sang mảng toàn cục)
+            // Transfer values to global log arrays
             g_mlwdf_delay[ue_id] = current_sched_list[num_active_ues].hol_delay_ms;
             g_mlwdf_thr[ue_id]  = current_sched_list[num_active_ues].avg_throughput_kbps;
             g_mlwdf_score[ue_id] = current_sched_list[num_active_ues].mlwdf_metric;
@@ -207,7 +178,7 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, s
     }
 
     // ========================================================================
-    // GIAI ĐOẠN 2: SẮP XẾP UEs THEO ĐỘ ƯU TIÊN M-LWDF (Giảm dần)
+    // PHASE 2: SORT UEs BY M-LWDF PRIORITY (Descending)
     // ========================================================================
     for (int i = 0; i < num_active_ues - 1; i++) {
         for (int j = 0; j < num_active_ues - i - 1; j++) {
@@ -220,24 +191,36 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, s
     }
 
     // ========================================================================
-    // GIAI ĐOẠN 3: CẬP NHẬT DANH SÁCH & GỌI TIỀN XỬ LÝ GỐC
+    // PHASE 3: UPDATE LIST & STANDARD M-LWDF EMA
     // ========================================================================
     if (num_active_ues > 0) {
-        // 1. Tráo đổi con trỏ danh sách liên kết của OAI
+        // 1. Swap OAI linked list pointers
         UE_info->list.head = current_sched_list[0].ue_id;
         for (int i = 0; i < num_active_ues - 1; i++) {
             UE_info->list.next[current_sched_list[i].ue_id] = current_sched_list[i+1].ue_id;
         }
         UE_info->list.next[current_sched_list[num_active_ues - 1].ue_id] = -1;
 
-        // 2. Cập nhật EMA Throughput
+        // 2. UPDATE EMA: CORE FIX FOR STARVATION
         for (int i = 0; i < num_active_ues; i++) {
             int id = current_sched_list[i].ue_id;
+
+            // Only the winning UE (Top 1) gets the throughput added.
+            float assumed_tx_kbps = 0.0;
+            if (i == 0) {
+                assumed_tx_kbps = current_sched_list[i].inst_rate_kbps;
+            }
+
             mlwdf_stats[id].avg_throughput_kbps =
-                (0.99 * mlwdf_stats[id].avg_throughput_kbps) + (0.01 * current_sched_list[i].inst_rate_kbps);
+                (0.99 * mlwdf_stats[id].avg_throughput_kbps) + (0.01 * assumed_tx_kbps);
+
+            // Prevent Divide-by-zero error
+            if (mlwdf_stats[id].avg_throughput_kbps < 0.1) {
+                mlwdf_stats[id].avg_throughput_kbps = 0.1;
+            }
         }
     }
 
-    // 3. Gọi hàm lập lịch gốc của OAI
+    // 3. Call the original OAI scheduler function
     schedule_ue_spec(module_idP, CC_id, frameP, subframeP);
 }

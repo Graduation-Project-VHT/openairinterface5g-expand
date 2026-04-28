@@ -1,36 +1,30 @@
 import os
 
 import matplotlib
-import numpy as np  # Thêm thư viện Toán học để xử lý trục thời gian tuyến tính
+import numpy as np
 import pandas as pd
 
-matplotlib.use("Agg")  # Ép hệ thống chạy ngầm, không mở cửa sổ UI để tránh lỗi Segfault
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-csv_file = "scheduler_log.csv"
+csv_file = "DL_scheduler_log.csv"
 
 # ==========================================
-# 1. KIỂM TRA VÀ ĐỌC DỮ LIỆU
+# 1. READ AND RESTORE DATA
 # ==========================================
 if not os.path.exists(csv_file):
-    print(f"[LỖI] Không tìm thấy file '{csv_file}' trong thư mục này.")
-    print("Vui lòng đảm bảo bạn đang đứng đúng thư mục chứa file log!")
+    print(f"[ERROR] Cannot find {csv_file}!")
     exit()
 
-print("Đang đọc và xử lý dữ liệu từ scheduler_log.csv...")
 df = pd.read_csv(csv_file)
-
 if df.empty:
-    print(
-        "[LỖI] File CSV tồn tại nhưng trống không (Không có dữ liệu). Hãy chạy lại mô phỏng!"
-    )
+    print(f"[ERROR] The file {csv_file} is empty!")
     exit()
 
-# Lấy danh sách ID của các thiết bị
 rntis = df["rnti"].unique()
 
 # ==========================================
-# 2. CẤU HÌNH GIAO DIỆN BIỂU ĐỒ (THESIS STYLE)
+# 2. THESIS-STYLE PLOT CONFIGURATION (4 GRAPHS)
 # ==========================================
 plt.rcParams.update(
     {
@@ -42,110 +36,146 @@ plt.rcParams.update(
     }
 )
 
-fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(14, 11), sharex=True)
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(14, 14), sharex=True)
 fig.suptitle(
-    "ĐÁNH GIÁ HIỆU NĂNG THUẬT TOÁN LẬP LỊCH M-LWDF TẠI TẦNG MAC",
+    "PERFORMANCE EVALUATION OF M-LWDF SCHEDULER (RANDOMIZED SCENARIO)",
     fontsize=18,
     fontweight="bold",
     y=0.97,
 )
 
-# Bảng màu chuẩn khoa học (Tối đa 7 UEs không bị trùng màu)
 colors = ["#e63946", "#1d3557", "#2a9d8f", "#f4a261", "#9c6644", "#8338ec", "#ff006e"]
 line_styles = ["-", "--", "-.", ":", "-", "--", "-."]
 
 # ==========================================
-# 3. VẼ ĐỒ THỊ CHO TỪNG UE (TRỤC THỜI GIAN TUYẾN TÍNH)
+# 3. DATA PROCESSING & PLOTTING
 # ==========================================
 for i, rnti in enumerate(rntis):
-    ue_data = df[df["rnti"] == rnti]
+    ue_data = df[df["rnti"] == rnti].copy()
+    if ue_data.empty:
+        continue
 
-    # KỸ THUẬT DUỖI THẲNG TRỤC X:
-    # Đếm số lượng log của UE này, mỗi dòng là 1ms. Đem chia 1000 ra Giây tuyệt đối.
     monotonic_time_sec = np.arange(len(ue_data)) / 1000.0
 
-    # Lấy thông số để làm Nhãn (Label)
-    alpha = ue_data["qos_alpha"].iloc[0]
-    profile = ue_data["cqi_profile"].iloc[0]
-    label_name = f"UE {rnti} (QoS \u03b1={alpha:.1f}, Vùng sóng={profile})"
+    # DYNAMIC LABEL EXTRACTION (Reading from CSV directly)
+    # Lấy giá trị QoS và CQI Profile thực tế của UE này từ dòng đầu tiên
+    qos_val = ue_data["qos_alpha"].iloc[0]
+    cqi_prof = ue_data["cqi_profile"].iloc[0]
+
+    # Xác định danh tính QoS (Đã cập nhật 5 mức)
+    if abs(qos_val - 5.0) < 0.1:
+        qos_str = "URLLC (\u03b1=5.0)"
+    elif abs(qos_val - 3.0) < 0.1:
+        qos_str = "VIP (\u03b1=3.0)"
+    elif abs(qos_val - 1.2) < 0.1:
+        qos_str = "Norm (\u03b1=1.2)"
+    elif abs(qos_val - 0.5) < 0.1:
+        qos_str = "Sync (\u03b1=0.5)"
+    else:
+        qos_str = "BE (\u03b1=0.1)"
+
+    # Xác định danh tính Vùng sóng & Sức chứa PRB
+    if cqi_prof == 0:
+        cqi_str = "Center(CQI=14)"
+        bytes_per_prb = 700  # 64QAM
+    elif cqi_prof == 1:
+        cqi_str = "Mid(CQI=9)"
+        bytes_per_prb = 300  # 16QAM
+    else:
+        cqi_str = "Edge(CQI=4)"
+        bytes_per_prb = 30  # QPSK
+
+    label_name = f"UE {rnti} | {qos_str} | {cqi_str}"
 
     color = colors[i % len(colors)]
     style = line_styles[i % len(line_styles)]
 
-    # Biểu đồ 1: HoL Delay
+    # Lọc các giá trị 0 do không có gói tin
+    ue_data["hol_delay_ms"] = ue_data["hol_delay_ms"].replace(0, np.nan)
+    ue_data["mlwdf_score"] = ue_data["mlwdf_score"].replace(0, np.nan)
+
+    # Tính Throughput Vật lý thực tế (Mbps)
+    ue_data["real_thr_mbps"] = (ue_data["nb_rb"] * bytes_per_prb * 8) / 1000.0
+
+    # Làm mượt (Moving Average)
+    window_size = 30
+    smooth_delay = (
+        ue_data["hol_delay_ms"].rolling(window=window_size, min_periods=1).mean()
+    )
+    smooth_score = (
+        ue_data["mlwdf_score"].rolling(window=window_size, min_periods=1).mean()
+    )
+    smooth_rb = ue_data["nb_rb"].rolling(window=window_size, min_periods=1).mean()
+    smooth_thr_mbps = (
+        ue_data["real_thr_mbps"].rolling(window=window_size, min_periods=1).mean()
+    )
+
+    # Vẽ 4 đồ thị
     ax1.plot(
         monotonic_time_sec,
-        ue_data["hol_delay_ms"],
+        smooth_delay,
         label=label_name,
         color=color,
         linestyle=style,
-        linewidth=1.8,
-        alpha=0.9,
+        linewidth=2.2,
+        alpha=0.95,
     )
-
-    # Biểu đồ 2: M-LWDF Score
     ax2.plot(
         monotonic_time_sec,
-        ue_data["mlwdf_score"],
+        smooth_score,
         label=label_name,
         color=color,
         linestyle=style,
-        linewidth=1.8,
-        alpha=0.9,
+        linewidth=2.2,
+        alpha=0.95,
     )
-
-    # Biểu đồ 3: PRB Allocation (Tài nguyên cấp phát)
     ax3.plot(
         monotonic_time_sec,
-        ue_data["nb_rb"],
+        smooth_rb,
         label=label_name,
         color=color,
         linestyle=style,
-        linewidth=1.8,
-        alpha=0.8,
+        linewidth=2.0,
+        alpha=0.85,
+    )
+    ax4.plot(
+        monotonic_time_sec,
+        smooth_thr_mbps,
+        label=label_name,
+        color=color,
+        linestyle=style,
+        linewidth=2.2,
+        alpha=0.95,
     )
 
 # ==========================================
-# 4. TRANG TRÍ VÀ CĂN CHỈNH CHI TIẾT
+# 4. DECORATION & EXPORT
 # ==========================================
-# Giao diện trục 1
-ax1.set_ylabel("HoL Delay (ms)", fontweight="bold")
-ax1.set_title(
-    "1. Tích tụ Độ trễ của Gói tin đầu hàng đợi (Head-of-Line Delay)",
-    loc="left",
-    color="#333333",
-)
+ax1.set_ylabel("Average HoL Delay (ms)", fontweight="bold")
+ax1.set_title("1. Head-of-Line Delay Stratification", loc="left", color="#333333")
 ax1.grid(True, linestyle="--", alpha=0.5)
-ax1.legend(
-    loc="upper left", bbox_to_anchor=(1.01, 1), borderaxespad=0.0
-)  # Đẩy legend ra ngoài viền phải
+ax1.legend(loc="upper left", bbox_to_anchor=(1.01, 1), borderaxespad=0.0)
 
-# Giao diện trục 2
-ax2.set_ylabel("M-LWDF Metric Score", fontweight="bold")
-ax2.set_title(
-    "2. Điểm số Cạnh tranh (Bùng nổ khi Delay vượt giới hạn)",
-    loc="left",
-    color="#333333",
-)
+ax2.set_ylabel("M-LWDF Score", fontweight="bold")
+ax2.set_title("2. M-LWDF Metric Score", loc="left", color="#333333")
 ax2.grid(True, linestyle="--", alpha=0.5)
 
-# Giao diện trục 3
-ax3.set_ylabel("Số PRB Cấp phát", fontweight="bold")
-ax3.set_xlabel("Thời gian mô phỏng tuyến tính (Giây)", fontweight="bold")
+ax3.set_ylabel("Avg PRB Allocation", fontweight="bold")
 ax3.set_title(
-    "3. Băng thông Vật lý (Khối tài nguyên PRB) được chia", loc="left", color="#333333"
+    "3. Physical Resource Block (PRB) Allocation Frequency", loc="left", color="#333333"
 )
 ax3.grid(True, linestyle="--", alpha=0.5)
 
-# Tự động căn lề để không bị cắt xén chữ
-plt.tight_layout(
-    rect=[0, 0.02, 0.85, 0.95]
-)  # Dành khoảng trống bên phải (0.85) cho bảng Chú thích
+ax4.set_ylabel("Actual Throughput (Mbps)", fontweight="bold")
+ax4.set_xlabel("Simulation Time (Seconds)", fontweight="bold")
+ax4.set_title(
+    "4. Actual Physical Throughput (Dynamic CQI Mapping)", loc="left", color="#333333"
+)
+ax4.grid(True, linestyle="--", alpha=0.5)
 
-# ==========================================
-# 5. XUẤT FILE ẢNH
-# ==========================================
-output_filename = "mlwdf_results_linear_pro.png"
+plt.tight_layout(
+    rect=[0, 0.02, 0.82, 0.95]
+)  # Nới lề phải thêm một chút cho cái Legend dài
+output_filename = "mlwdf_results_random.png"
 plt.savefig(output_filename, dpi=300, bbox_inches="tight")
-print(f"[THÀNH CÔNG] Đã render xong biểu đồ tuyến tính chất lượng cao!")
-print(f"--> Hãy mở file '{output_filename}' để kiểm tra kết quả.")
+print(f"[SUCCESS] Rendered Randomized Scenario: '{output_filename}'")
