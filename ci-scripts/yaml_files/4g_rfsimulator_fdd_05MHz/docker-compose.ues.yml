@@ -82,10 +82,7 @@ services:
         environment:
             TZ: Europe/Paris
             ASAN_OPTIONS: detect_leaks=0
-<<<<<<< HEAD
             LD_LIBRARY_PATH: /openairinterface5g/cmake_targets/ran_build/build:/usr/local/lib
-=======
->>>>>>> f66671985ece500bd32ff709e70bbc0295591087
             USE_ADDITIONAL_OPTIONS: >-
                 --rfsim
                 -C 2680000000
@@ -95,17 +92,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-<<<<<<< HEAD
             - /home/phandinhquy/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue2.conf:/opt/oai-lte-ue/etc/ue_usim.conf
             - /home/phandinhquy/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim.conf:/opt/oai-lte-ue/etc/ue.conf
             - /home/phandinhquy/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
             - /home/phandinhquy/openairinterface5g-expand:/openairinterface5g
-=======
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue2.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
->>>>>>> f66671985ece500bd32ff709e70bbc0295591087
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s

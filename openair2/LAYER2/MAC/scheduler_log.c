@@ -18,21 +18,12 @@ void scheduler_log_init(void)
 
   const char *header = "timestamp_ms,frame,subframe,rnti,direction,nb_rb,rb_util(%),mcs,tbs_bytes,sdu_bytes,cqi,retx,harq_pid";
   // Write the CSV header
-<<<<<<< HEAD
-  fprintf(scheduler_csv,
-          "timestamp_ms,frame,subframe,rnti,direction,"
-          "nb_rb,mcs,tbs_bytes,cqi,retx,hol_delay_ms,avg_thr_kbps,mlwdf_score,qos_alpha,cqi_profile\n");
-
-  fflush(scheduler_csv);
-  LOG_I(MAC, "[SCHED_LOG] CSV logging started, writing to /openairinterface5g/logs/scheduler_log.csv\n");
-=======
   fprintf(DL_scheduler_csv, "%s\n", header);
   fprintf(UL_scheduler_csv, "%s\n", header);
 
   fflush(DL_scheduler_csv);
   fflush(UL_scheduler_csv);
   LOG_I(MAC, "[SCHED_LOG] CSV loggin started, writing to /openairinterface5g/log/\n");
->>>>>>> f66671985ece500bd32ff709e70bbc0295591087
 }
 
 void scheduler_log_close(void)
