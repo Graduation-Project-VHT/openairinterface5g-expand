@@ -56,7 +56,7 @@ int max_ci_dl_run(module_id_t Mod_id, int CC_id, int frame, int subframe,
 
         for (int UE_id = UE_list->head; UE_id >= 0; UE_id = UE_list->next[UE_id]) {
             if (UE_info->UE_sched_ctrl[UE_id].pre_nb_available_rbs[CC_id] > 0) {
-                continue; // Bỏ qua UE này, để OAI tự lo HARQ
+                 continue; // Bỏ qua UE này, để OAI tự lo HARQ
             }
             uint32_t buffer_bytes = UE_info->UE_template[CC_id][UE_id].dl_buffer_total;
             uint8_t current_cqi = UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id];
