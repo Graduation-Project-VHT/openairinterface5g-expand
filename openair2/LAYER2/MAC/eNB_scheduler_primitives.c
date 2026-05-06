@@ -2006,8 +2006,14 @@ void dump_ue_list(UE_list_t *listP)
 inline void add_ue_list(UE_list_t *listP, int UE_id)
 {
   int *cur = &listP->head;
-  while (*cur >= 0)
+  while (*cur >= 0) {
+    if (*cur == UE_id) {
+      // UE_id already in list — do NOT add again
+      LOG_W(MAC, "[add_ue_list] UE_id %d already in list, skipping\n", UE_id);
+      return;
+    }
     cur = &listP->next[*cur];
+  }
   *cur = UE_id;
   LOG_D(MAC, "added UE %d in UE list\n", UE_id);
 }
@@ -2048,6 +2054,19 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP, int harq_pidP, uin
   int UE_id;
   int i, j;
   UE_info_t *UE_info = &RC.mac[mod_idP]->UE_info;
+
+  // Atomic check-then-act: lock ONLY for this critical section
+  pthread_mutex_lock(&RC.mac[mod_idP]->UE_info.UE_list_mutex);
+
+  // Check if this RNTI already has a slot in the UE list.
+  // If so, return the existing UE_id rather than creating a duplicate.
+  int existing_id = find_UE_id(mod_idP, rntiP);
+  if (existing_id >= 0) {
+      pthread_mutex_unlock(&RC.mac[mod_idP]->UE_info.UE_list_mutex);
+    LOG_W(MAC, "[add_new_ue] RNTI 0x%04x already exists as UE_id %d — skipping duplicate add\n", rntiP, existing_id);
+    return existing_id;
+  }
+
   LOG_D(MAC, "[eNB %d, CC_id %d] Adding UE with rnti %x (prev. num_UEs %d)\n", mod_idP, cc_idP, rntiP, UE_info->num_UEs);
 
   for (i = 0; i < MAX_MOBILES_PER_ENB; i++) {
@@ -2066,6 +2085,9 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP, int harq_pidP, uin
     UE_info->num_UEs++;
     UE_info->active[UE_id] = true;
     add_ue_list(&UE_info->list, UE_id);
+
+    pthread_mutex_unlock(&RC.mac[mod_idP]->UE_info.UE_list_mutex);
+
     dump_ue_list(&UE_info->list);
     pp_impl_param_t *dl = &RC.mac[mod_idP]->pre_processor_dl;
     if (dl->slices) // inform slice implementation about new UE
@@ -2101,8 +2123,11 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP, int harq_pidP, uin
     }
     eNB_dlsch_info[mod_idP][cc_idP][UE_id].status = S_DL_NONE;
     LOG_D(MAC, "[eNB %d] Add UE_id %d on Primary CC_id %d: rnti %x\n", mod_idP, UE_id, cc_idP, rntiP);
+
     return (UE_id);
   }
+
+  pthread_mutex_unlock(&RC.mac[mod_idP]->UE_info.UE_list_mutex);
 
   LOG_E(MAC, "error in add_new_ue(), could not find space in UE_list, Dumping UE list\n");
   dump_ue_list(&UE_info->list);
@@ -3826,14 +3851,14 @@ void extract_harq(module_id_t mod_idP,
           }
 
           // LOG_D(MAC, "In extract_harq(): pdu[0] = %d for harq_pid = %d\n", pdu[0], harq_pid);
-          LOG_I(MAC,
-                "[HARQ_DEBUG] frame %d sf %d rnti %x harq_pid %d pdu[0]=%d "
-                "(1=ACK 2=NACK 4=DTX)\n",
-                frameP,
-                subframeP,
-                rnti,
-                harq_pid,
-                pdu[0]);
+          // LOG_I(MAC,
+          //       "[HARQ_DEBUG] frame %d sf %d rnti %x harq_pid %d pdu[0]=%d "
+          //       "(1=ACK 2=NACK 4=DTX)\n",
+          //       frameP,
+          //       subframeP,
+          //       rnti,
+          //       harq_pid,
+          //       pdu[0]);
 
           if (pdu[0] == 1) { // ACK
             sched_ctl->round[CC_idP][harq_pid] = 8; // release HARQ process

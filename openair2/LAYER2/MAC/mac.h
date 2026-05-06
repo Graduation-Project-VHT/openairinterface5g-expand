@@ -61,7 +61,7 @@
 
 #define MAX_MAC_INST 16
 #define BCCH_PAYLOAD_SIZE_MAX 128
-#define CCCH_PAYLOAD_SIZE_MAX 512 
+#define CCCH_PAYLOAD_SIZE_MAX 512
 #define PCCH_PAYLOAD_SIZE_MAX 128
 #define RAR_PAYLOAD_SIZE_MAX 128
 
@@ -1099,6 +1099,9 @@ typedef struct {
   UE_list_t list;
   int num_UEs;
   bool active[MAX_MOBILES_PER_ENB];
+
+  // For controlling more than maximum RB allocation issue
+  pthread_mutex_t UE_list_mutex;
 } UE_info_t;
 
 /*! \brief deleting control information*/
