@@ -17,7 +17,6 @@
 #define CIC_FILTER_NR_H
 
 #include "PHY/defs_nr_UE.h"
-#include "PHY/types.h"
 
 /************** DEFINE ********************************************/
 

@@ -14,14 +14,10 @@ void nr_generate_dci(PHY_VARS_gNB *gNB,
                      NR_DL_FRAME_PARMS *frame_parms,
                      int slot);
 
-int16_t find_nr_pdcch(int frame,int slot, PHY_VARS_gNB *gNB,find_type_t type);
-
 void nr_fill_dci(PHY_VARS_gNB *gNB,
                  int frame,
                  int slot,
 		 nfapi_nr_dl_tti_pdcch_pdu *pdcch_pdu);
-
-int16_t find_nr_ul_dci(int frame,int slot, PHY_VARS_gNB *gNB,find_type_t type);
 
 void nr_fill_ul_dci(PHY_VARS_gNB *gNB,
 		    int frame,

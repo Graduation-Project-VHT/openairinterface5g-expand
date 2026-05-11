@@ -8,6 +8,7 @@
   <testCase>
     <class>Build_Run_Tests</class>
     <desc>Build and Run UnitTests</desc>
+    <dockerfile>docker/Dockerfile.unittest.ubuntu</dockerfile>
     <node>obelix</node>
   </testCase>
 

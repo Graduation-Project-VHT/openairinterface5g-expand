@@ -10,6 +10,7 @@
 #include "executables/lte-softmodem.h"
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_extern.h"
+#include "scenario.h"
 
 #include "LAYER2/MAC/mac_proto.h"
 #include "common/utils/LOG/log.h"
@@ -37,6 +38,9 @@
 #define DEBUG_eNB_SCHEDULER 1
 
 extern RAN_CONTEXT_t RC;
+
+// Thêm khai báo hàm ở đầu file hoặc lấy từ header
+extern void generate_dynamic_cqi(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP);
 
 static const uint16_t pdcch_order_table[6] = {31, 31, 511, 2047, 2047, 8191};
 
@@ -515,8 +519,7 @@ copy_ulreq(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP) {
 
 #include <openair1/PHY/LTE_TRANSPORT/transport_proto.h>
 
-void
-eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
+void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
                           frame_t frameP,
                           sub_frame_t subframeP) {
   // Logging to CSV file
@@ -1016,6 +1019,24 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     schedule_ulsch_phy_test(module_idP,frameP,subframeP);
     schedule_ue_spec_phy_test(module_idP,frameP,subframeP,mbsfn_status);
   }
+  
+  extern void init_mac_scheduler_plugins(module_id_t module_idP);
+
+
+  // Hàm này sẽ giả lập lớp PHY vừa báo cáo CQI mới của các UE lên MAC
+    generate_dynamic_cqi(module_idP, frameP, subframeP);
+    init_mac_scheduler_plugins(module_idP);
+    // =========================================================================
+    // EXECUTION SCHEDULER (OAI NATIVE)
+    // Hệ thống sẽ TỰ ĐỘNG gọi Max C/I hoặc FairRR tùy vào Struct đã bind lúc Init!
+    // =========================================================================
+    
+    // Lập lịch Uplink 
+    schedule_ulsch_p(module_idP, frameP, subframeP);
+
+    // Lập lịch Downlink 
+    int mbsfn_flag[MAX_NUM_CCs] = {0};
+    schedule_dlsch(module_idP, frameP, subframeP, mbsfn_flag);
 
   /* Allocate CCEs for good after scheduling is done */
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {

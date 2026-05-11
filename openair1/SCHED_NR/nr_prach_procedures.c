@@ -27,7 +27,7 @@ void L1_nr_prach_procedures(PHY_VARS_gNB *gNB, int frame, int slot, nfapi_nr_rac
   rach_ind->slot = slot;
   rach_ind->number_of_pdus = 0;
 
-  prach_item_t *prach_id = find_nr_prach(&gNB->prach_list, frame, slot, gNB->frame_parms.nb_antennas_rx, SEARCH_EXIST);
+  prach_item_t *prach_id = find_nr_prach(&gNB->prach_list, frame, slot, gNB->frame_parms.nb_antennas_rx, NR_SEARCH_EXIST);
   if (!prach_id) {
     return;
   }

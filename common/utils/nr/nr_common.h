@@ -25,6 +25,9 @@
 #define NR_NB_SC_PER_RB 12
 #define NR_MAX_NUM_LCID 32
 #define NR_MAX_NUM_QFI 64
+#define MAX_NUM_NR_DLSCH_SEGMENTS_PER_LAYER 36
+#define MAX_NUM_NR_ULSCH_SEGMENTS_PER_LAYER 34
+#define NR_MAX_SLOTS_PER_FRAME 160
 #define RNTI_NAMES /* see 38.321  Table 7.1-2  RNTI usage */      \
   R(TYPE_C_RNTI_) /* Cell RNTI */                                  \
   R(TYPE_CS_RNTI_) /* Configured Scheduling RNTI */                \
@@ -40,6 +43,11 @@
   R(TYPE_TPC_PUCCH_RNTI_) /* PUCCH power control */               \
   R(TYPE_TPC_SRS_RNTI_)                                           \
   R(TYPE_MCS_C_RNTI_)
+
+/* FFS_NR_TODO it defines ue capability which is the number of slots        */
+/* - between reception of pdsch and transmission of its acknowlegment  (k1) */
+/* - between reception of un uplink grant and its related transmission (k2) */
+#define NR_UE_CAPABILITY_SLOT_RX_TO_TX (3)
 
 #define R(k) k ,
 typedef enum { RNTI_NAMES } nr_rnti_type_t;

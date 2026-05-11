@@ -16,10 +16,8 @@
 #ifndef LOWPAPR_SEQUENCES_NR_H
 #define LOWPAPR_SEQUENCES_NR_H
 
-#include "PHY/types.h"
 #include "PHY/NR_REFSIG/ss_pbch_nr.h"
 #include "PHY/defs_nr_common.h"
-#include "PHY/defs_gNB.h"
 
 /************** DEFINE ********************************************/
 #define U_GROUP_NUMBER               (30)    /* maximum number of sequence-group */

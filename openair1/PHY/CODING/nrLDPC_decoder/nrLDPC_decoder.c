@@ -17,6 +17,7 @@
 #include "nrLDPC_cnProc.h"
 #include "nrLDPC_bnProc.h"
 #include "openair1/PHY/CODING/coding_defs.h"
+#include "log.h"
 #define UNROLL_CN_PROC 1
 #define UNROLL_BN_PROC 1
 #define UNROLL_BN_PROC_PC 1

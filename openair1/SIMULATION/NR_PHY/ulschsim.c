@@ -406,7 +406,7 @@ int main(int argc, char **argv)
     exit(-1);
   }
 
-  nr_init_ul_harq_processes(UE->ul_harq_processes, NR_MAX_ULSCH_HARQ_PROCESSES, UE->frame_parms.N_RB_UL, UE->frame_parms.nb_antennas_tx);
+  nr_init_ul_harq_processes(UE->ul_harq_processes, NR_MAX_HARQ_PROCESSES, UE->frame_parms.N_RB_UL, UE->frame_parms.nb_antennas_tx);
 
   initFloatingCoresTpool(1, &nrUE_params.Tpool, false, "UE-tpool");
 
@@ -585,7 +585,7 @@ int main(int argc, char **argv)
     printf("\n");
   }
 
-  free_nr_ue_ul_harq(UE->ul_harq_processes, NR_MAX_ULSCH_HARQ_PROCESSES, UE->frame_parms.N_RB_UL, UE->frame_parms.nb_antennas_tx);
+  free_nr_ue_ul_harq(UE->ul_harq_processes, NR_MAX_HARQ_PROCESSES, UE->frame_parms.N_RB_UL, UE->frame_parms.nb_antennas_tx);
 
   int nb_slots_to_set = (1 << mu) * NR_NUMBER_OF_SUBFRAMES_PER_FRAME;
   for (int i = 0; i < nb_slots_to_set; ++i)

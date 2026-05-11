@@ -18,10 +18,6 @@ Beware if you previously pulled the `develop` branch that your repository may be
 - [FEATURE_SET.md](./FEATURE_SET.md): lists supported features
 - [GET_SOURCES.md](./GET_SOURCES.md): how to download the sources
 - [BUILD.md](./BUILD.md): how to build the sources
-- [code-style-contrib.md](./code-style-contrib.md): overall working practices, code style, and review process
-- [cross-compile.md](./cross-compile.md): how to cross-compile OAI for ARM
-- [clang-format.md](./clang-format.md): how to format the code
-- [sanitizers.md](./dev_tools/sanitizers.md): how to run with ASan/UBSan/MemSAN/TSan
 - [environment-variables.md](./environment-variables.md): the environment variables used by OAI
 - [tuning_and_security.md](./tuning_and_security.md): performance and security considerations
 
@@ -34,20 +30,21 @@ There is some general information in the [OpenAirInterface Gitlab Wiki](https://
     * [OAI gNB with COTS UE](./NR_SA_Tutorial_COTS_UE.md)
     * [OAI NR-UE](./NR_SA_Tutorial_OAI_nrUE.md)
     * [Multiple OAI NR-UE with RFsimulator](./NR_SA_Tutorial_OAI_multi_UE.md)
-- [RUNMODEM.md](./RUNMODEM.md): Generic information on how to
+- [RUNMODEM.md](./RUNMODEM.md): Information on how to run the gNB
     * Run simulators
     * Run with hardware
-    * Specific OAI modes (phy-test, do-ra, noS1)
     * (5G) Using SDAP and custom DRBs
     * IF setups and arbitrary frequencies
     * MIMO
+- [nrUE-specific configuration and modes](./runmodem-nrue.md)
+    * Specific OAI modes (phy-test, do-ra, noS1)
 - [How to run OAI with O-RAN 7.2 FHI](./ORAN_FHI7.2_Tutorial.md)
 - [How to run a 5G-NSA setup](./TESTING_OAI_NSA_COTS_UE.md)
 - [How to run a 4G setup using L1 simulator](./L1SIM.md) _Note: we recommend the RFsimulator_
 - [How to use the L2 simulator](./L2NFAPI.md)
 - [How to use the OAI channel simulator](../openair1/SIMULATION/TOOLS/DOC/channel_simulation.md)
+- [How to run an NTN setup](./ntn-configuration.md)
 - [How to use GPU-accelerated channel simulation](../openair1/SIMULATION/TOOLS/DOC/gpu_acceleration.md)
-- [How to use multiple BWPs](./RUN_NR_multiple_BWPs.md)
 - [How to run OAI-VNF and OAI-PNF](./nfapi.md): how to run the FAPI/nFAPI split,
   including some general remarks on FAPI/nFAPI.
 - [How to use the positioning reference signal (PRS)](./RUN_NR_PRS.md)
@@ -133,7 +130,13 @@ The other SDRs (AW2S, LimeSDR, ...) have no READMEs.
 
 ## Developer tools
 
+- [code-style-contrib.md](./code-style-contrib.md): overall working practices, code style, and review process
+- [cross-compile.md](./cross-compile.md): how to cross-compile OAI for ARM
+- [clang-format.md](./clang-format.md): how to format the code. See also the
+  next entry for an error detection tool.
 - [formatting](../tools/formatting/README.md) is a clang-format error detection tool
+- [sanitizers.md](./dev_tools/sanitizers.md): how to run with ASan/UBSan/MemSAN/TSan
 - [iwyu](../tools/iwyu/README.md) is a tool to detect `#include` errors
 - [docker-dev-env](../tools/docker-dev-env/README.md) is a ubuntu24 docker development environment
+- [performance analysis with tracy](./dev_tools/tracy.md)
 - [doc_best_practices.md](./doc_best_practices.md): overall best practices for writing documentations

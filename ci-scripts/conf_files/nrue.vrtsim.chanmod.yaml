@@ -11,7 +11,7 @@ uicc0:
 thread-pool: "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
 
 channelmod:
-  max_chan: 10;
+  max_chan: 10
   modellist: DefaultChannelList
   DefaultChannelList:
    - model_name: client_tx_channel_model

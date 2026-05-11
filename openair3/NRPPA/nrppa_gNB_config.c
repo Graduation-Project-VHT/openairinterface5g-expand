@@ -8,6 +8,7 @@
 #include "openair1/PHY/defs_gNB.h"
 #include "common/ran_context.h"
 #include "positioning_nr_paramdef.h"
+#include "common/config/config_userapi.h"
 
 positioning_config_t RCconfig_nr_positioning(void)
 {

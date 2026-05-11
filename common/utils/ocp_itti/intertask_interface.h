@@ -53,9 +53,7 @@ typedef struct IttiMsgText_s {
   char      text[];
 } IttiMsgText;
 
-#include <openair2/COMMON/phy_messages_types.h>
 #include <openair2/COMMON/mac_messages_types.h>
-#include <openair2/COMMON/rlc_messages_types.h>
 #include <openair2/COMMON/pdcp_messages_types.h>
 #include <openair2/COMMON/networkDef.h>
 #include <openair2/COMMON/as_message.h>
@@ -208,7 +206,6 @@ typedef struct IttiMsgText_s {
 #include <openair2/COMMON/m2ap_messages_types.h>
 #include <openair2/COMMON/m3ap_messages_types.h>
 #include <openair2/COMMON/sctp_messages_types.h>
-#include <openair2/COMMON/udp_messages_types.h>
 #include <openair2/COMMON/gtpv1_u_messages_types.h>
 #include <openair2/COMMON/ngap_messages_types.h>
 #include <openair2/COMMON/nrppa_messages_types.h>
@@ -262,18 +259,14 @@ typedef struct {
   TASK_DEF(TASK_UNKNOWN, 50)          \
   TASK_DEF(TASK_TIMER, 10)            \
   TASK_DEF(TASK_L2L1, 200)            \
-  TASK_DEF(TASK_BM, 200)              \
-  TASK_DEF(TASK_PHY_ENB, 200)         \
   TASK_DEF(TASK_MAC_GNB, 200)         \
   TASK_DEF(TASK_RLC_ENB, 200)         \
-  TASK_DEF(TASK_RRC_ENB_NB_IoT, 200)  \
   TASK_DEF(TASK_PDCP_ENB, 200)        \
   TASK_DEF(TASK_PDCP_GNB, 200)        \
   TASK_DEF(TASK_DATA_FORWARDING, 200) \
   TASK_DEF(TASK_END_MARKER, 200)      \
   TASK_DEF(TASK_RRC_ENB, 200)         \
   TASK_DEF(TASK_RRC_GNB, 200)         \
-  TASK_DEF(TASK_RAL_ENB, 200)         \
   TASK_DEF(TASK_S1AP, 200)            \
   TASK_DEF(TASK_NGAP, 200)            \
   TASK_DEF(TASK_NRPPA, 200)           \
@@ -288,14 +281,12 @@ typedef struct {
   TASK_DEF(TASK_GNB_APP, 200)         \
   TASK_DEF(TASK_MCE_APP, 200)         \
   TASK_DEF(TASK_MME_APP, 200)         \
-  TASK_DEF(TASK_PHY_UE, 200)          \
   TASK_DEF(TASK_MAC_UE, 200)          \
   TASK_DEF(TASK_RLC_UE, 200)          \
   TASK_DEF(TASK_PDCP_UE, 200)         \
   TASK_DEF(TASK_RRC_UE, 200)          \
   TASK_DEF(TASK_RRC_NRUE, 200)        \
   TASK_DEF(TASK_NAS_UE, 200)          \
-  TASK_DEF(TASK_RAL_UE, 200)          \
   TASK_DEF(TASK_GTPV1_U, 1000)        \
   TASK_DEF(TASK_CU_F1, 200)           \
   TASK_DEF(TASK_DU_F1, 200)           \

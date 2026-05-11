@@ -7,7 +7,7 @@
  */
 
 #include "common/utils/time_meas.h"
-#include "openair1/PHY/defs_common.h"
+#include "openair1/PHY/CODING/coding_defs.h"
 #include "common/utils/threadPool/thread-pool.h"
 
 #ifndef __NRLDPC_CODING_INTERFACE__H__

@@ -6,6 +6,7 @@
  * \brief API to stream I/Q samples over standard ethernet
  */
 
+#include "utils.h"
 #include <arpa/inet.h>
 #include <linux/if_packet.h>
 #include <stdio.h>
@@ -37,20 +38,30 @@ int trx_eth_start(openair0_device_t *device)
        AssertFatal(device->thirdparty_init != NULL, "device->thirdparty_init is null\n");
        AssertFatal(device->thirdparty_init(device) == 0, "third-party init failed\n");
        device->openair0_cfg->samples_per_packet = 256;
-       eth->num_fd = 1; //max(device->openair0_cfg->rx_num_channels,device->openair0_cfg->tx_num_channels); 
-       udp_ctx_t *u[1+eth->num_fd];
-       device->utx = (udp_ctx_t**)malloc(sizeof(device->utx));
-       for (int i=0;i<eth->num_fd;i++) {
-          u[i] = malloc(sizeof(udp_ctx_t));
-          u[i]->thread_id=i;
-          u[i]->device = device;
-	  printf("UDP Read Thread %d on core %d\n",i,device->openair0_cfg->rxfh_cores[i]);
-          threadCreate(&u[i]->pthread,udp_read_thread,u[i],"udp read thread",device->openair0_cfg->rxfh_cores[i],OAI_PRIORITY_RT_MAX);
-          device->utx[i] = malloc(sizeof(udp_ctx_t));
-          device->utx[i]->thread_id=i;
-          device->utx[i]->device = device;
-	  printf("UDP Write Thread %d on core %d\n",i,device->openair0_cfg->txfh_cores[i]);
-          threadCreate(&device->utx[i]->pthread,udp_write_thread,device->utx[i],"udp write thread",device->openair0_cfg->txfh_cores[i],OAI_PRIORITY_RT_MAX);
+       eth->num_fd = 1; //max(device->openair0_cfg->rx_num_channels,device->openair0_cfg->tx_num_channels);
+       udp_ctx_t *u[1 + eth->num_fd];
+       eth->utx = malloc_or_fail(sizeof(eth->utx));
+       for (int i = 0; i < eth->num_fd; i++) {
+         u[i] = malloc_or_fail(sizeof(udp_ctx_t));
+         u[i]->thread_id = i;
+         u[i]->device = device;
+         printf("UDP Read Thread %d on core %d\n", i, device->openair0_cfg->rxfh_cores[i]);
+         threadCreate(&u[i]->pthread,
+                      udp_read_thread,
+                      u[i],
+                      "udp read thread",
+                      device->openair0_cfg->rxfh_cores[i],
+                      OAI_PRIORITY_RT_MAX);
+         eth->utx[i] = malloc_or_fail(sizeof(udp_ctx_t));
+         eth->utx[i]->thread_id = i;
+         eth->utx[i]->device = device;
+         printf("UDP Write Thread %d on core %d\n", i, device->openair0_cfg->txfh_cores[i]);
+         threadCreate(&eth->utx[i]->pthread,
+                      udp_write_thread,
+                      eth->utx[i],
+                      "udp write thread",
+                      device->openair0_cfg->txfh_cores[i],
+                      OAI_PRIORITY_RT_MAX);
        }
        device->sampling_rate_ratio_n=1;
        device->sampling_rate_ratio_d=1;

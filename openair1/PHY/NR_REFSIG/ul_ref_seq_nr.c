@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "defs.h"
+#include "log.h"
 
 #include "PHY/NR_REFSIG/ul_ref_seq_nr.h"
 

@@ -17,6 +17,9 @@
 #include "common/utils/load_module_shlib.h"
 #include "common/utils/LOG/log.h"
 #include "executables/softmodem-common.h"
+#include "common/config/config_paramdesc.h"
+#include "common/config/config_userapi.h"
+#include "common/cmake_defs.h"
 
 #define MAX_GAP 100ULL
 const char *const devtype_names[MAX_RF_DEV_TYPE] =
@@ -224,6 +227,9 @@ int openair0_write_reorder_common(nrue_ru_write_t nrue_ru_write,
     ctx->nextTS = timestamp;
     pthread_mutex_init(&ctx->mutex_write, NULL);
     pthread_mutex_init(&ctx->mutex_store, NULL);
+    for (int i = 0; i < WRITE_QUEUE_SZ; i++) {
+      ctx->queue[i].txp = malloc(sizeof(void *) * NB_ANTENNAS_TX);
+    }
     ctx->initDone = true;
   }
   if (pthread_mutex_trylock(&ctx->mutex_write) == 0) {
@@ -270,8 +276,10 @@ void openair0_write_reorder_clear_context(openair0_device_t *device)
     LOG_E(HW, "write_reorder_clear_context call while still writing on the device\n");
   pthread_mutex_destroy(&ctx->mutex_write);
   pthread_mutex_lock(&ctx->mutex_store);
-  for (int i = 0; i < WRITE_QUEUE_SZ; i++)
+  for (int i = 0; i < WRITE_QUEUE_SZ; i++) {
     ctx->queue[i].active = false;
+    free(ctx->queue[i].txp);
+  }
   pthread_mutex_unlock(&ctx->mutex_store);
   pthread_mutex_destroy(&ctx->mutex_store);
   ctx->initDone = false;

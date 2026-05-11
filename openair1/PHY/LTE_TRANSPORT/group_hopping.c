@@ -34,7 +34,7 @@ void generate_grouphop(LTE_DL_FRAME_PARMS *frame_parms)
     }
     else {
       if ((ns&3) == 0) {
-        s = lte_gold_generic(&x1,&x2,reset);
+        s = gold_generic(&x1,&x2,reset);
         reset = 0;
       }
 
@@ -62,7 +62,7 @@ void generate_seqhop(LTE_DL_FRAME_PARMS *frame_parms)
 
   x2 = (32*(frame_parms->Nid_cell/30) + fss_pusch)%30;
 
-  s = lte_gold_generic(&x1,&x2,reset);
+  s = gold_generic(&x1,&x2,reset);
 #ifdef DEBUG_GROUPHOP
   printf("[PHY] SeqHop:");
 #endif
@@ -105,7 +105,7 @@ void generate_nPRS(LTE_DL_FRAME_PARMS *frame_parms)
 
   for (n=0; n<(20*Nsymb_UL); n++) { //loop over total number of bytes to generate
     if ((n&3) == 0) {
-      s = lte_gold_generic(&x1,&x2,reset);
+      s = gold_generic(&x1,&x2,reset);
       reset = 0;
       //      printf("n %d : s (%d,%d,%d,%d)\n",n,((uint8_t*)&s)[0],((uint8_t*)&s)[1],((uint8_t*)&s)[2],((uint8_t*)&s)[3]);
     }

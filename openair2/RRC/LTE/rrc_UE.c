@@ -2819,8 +2819,6 @@ int decode_SIB1( const protocol_ctxt_t *const ctxt_pP, const uint8_t eNB_index, 
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIB1systemInfoValueTag = sib1->systemInfoValueTag;
 
   if (!IS_SOFTMODEM_NOS1) {
-    int cell_valid = 0;
-
     if (sib1->cellAccessRelatedInfo.cellBarred == LTE_SystemInformationBlockType1__cellAccessRelatedInfo__cellBarred_notBarred) {
       /* Cell is not barred */
       int plmn;
@@ -2863,23 +2861,10 @@ int decode_SIB1( const protocol_ctxt_t *const ctxt_pP, const uint8_t eNB_index, 
           NAS_CELL_SELECTION_CNF (msg_p).rsrq = rsrq;
           NAS_CELL_SELECTION_CNF (msg_p).rsrp = rsrp;
           itti_send_msg_to_task(TASK_NAS_UE, ctxt_pP->instance, msg_p);
-          cell_valid = 1;
           UE_rrc_inst[ctxt_pP->module_id].selected_plmn_identity = plmn + 1;
           break;
         }
       }
-    }
-
-    if (cell_valid == 0) {
-      /* Cell can not be used, ask PHY to try the next one */
-      MessageDef  *msg_p;
-      msg_p = itti_alloc_new_message(TASK_RRC_UE, 0, PHY_FIND_NEXT_CELL_REQ);
-      itti_send_msg_to_task(TASK_PHY_UE, ctxt_pP->instance, msg_p);
-      LOG_E(RRC,
-            "Synched with a cell, but PLMN doesn't match our SIM "
-            "(selected_plmn_identity %d), the message PHY_FIND_NEXT_CELL_REQ "
-            "is sent but lost in current UE implementation!\n",
-            UE_rrc_inst[ctxt_pP->module_id].selected_plmn_identity);
     }
   }
 
@@ -4457,11 +4442,7 @@ void *rrc_ue_task( void *args_p ) {
 
           case RRC_STATE_IDLE: {
             /* Ask to layer 1 to find a cell matching the criterion */
-            MessageDef *message_p;
-            message_p = itti_alloc_new_message(TASK_RRC_UE, 0, PHY_FIND_CELL_REQ);
-            PHY_FIND_CELL_REQ (message_p).earfcn_start = 1;
-            PHY_FIND_CELL_REQ (message_p).earfcn_end = 1;
-            itti_send_msg_to_task(TASK_PHY_UE, UE_MODULE_ID_TO_INSTANCE(ue_mod_id), message_p);
+            LOG_W(RRC, "PHY_FIND_CELL_REQ message to L1/PHY not implemented\n");
             rrc_set_sub_state (ue_mod_id, RRC_SUB_STATE_IDLE_SEARCHING);
             break;
           }

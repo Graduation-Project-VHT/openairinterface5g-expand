@@ -17,7 +17,7 @@
 static int decode_guti_5gs_mobile_identity(Guti5GSMobileIdentity_t *guti, const uint8_t *buffer);
 
 static int encode_guti_5gs_mobile_identity(const Guti5GSMobileIdentity_t *guti, uint8_t *buffer);
-static int encode_suci_5gs_mobile_identity(const Suci5GSMobileIdentity_t *suci, uint8_t *buffer);
+static int encode_suci_5gs_mobile_identity(const Suci5GSMobileIdentity_t *suci, uint8_t *buffer, uint32_t len);
 static int encode_imeisv_5gs_mobile_identity(const Imeisv5GSMobileIdentity_t *imeisv, uint8_t *buffer);
 
 int encode_stmsi_5gs_mobile_identity(uint8_t *buffer, const Stmsi5GSMobileIdentity_t *stmsi, uint32_t len)
@@ -121,7 +121,7 @@ int encode_5gs_mobile_identity(const FGSMobileIdentity *fgsmobileidentity, uint8
   }
 
   if (fgsmobileidentity->suci.typeofidentity == FGS_MOBILE_IDENTITY_SUCI) {
-    encoded_rc = encode_suci_5gs_mobile_identity(&fgsmobileidentity->suci, buffer + encoded);
+    encoded_rc = encode_suci_5gs_mobile_identity(&fgsmobileidentity->suci, buffer + encoded, len);
   }
 
   if (fgsmobileidentity->imeisv.typeofidentity == FGS_MOBILE_IDENTITY_IMEISV) {
@@ -218,9 +218,13 @@ static int encode_guti_5gs_mobile_identity(const Guti5GSMobileIdentity_t *guti, 
   return encoded;
 }
 
-static int encode_suci_5gs_mobile_identity(const Suci5GSMobileIdentity_t *suci, uint8_t *buffer)
+static int encode_suci_5gs_mobile_identity(const Suci5GSMobileIdentity_t *suci, uint8_t *buffer, uint32_t len)
 {
   uint32_t encoded = 0;
+
+  if (len < 8)
+    return -1;
+
   *(buffer + encoded) = (suci->supiformat << 4) | (suci->typeofidentity);
   encoded++;
   *(buffer + encoded) = ((suci->mccdigit2 & 0xf) << 4) | (suci->mccdigit1 & 0xf);
@@ -242,15 +246,34 @@ static int encode_suci_5gs_mobile_identity(const Suci5GSMobileIdentity_t *suci, 
   *(buffer + encoded) = suci->homenetworkpki;
   encoded++;
 
-  const char *ptr = suci->schemeoutput;
-  while (ptr < suci->schemeoutput + strlen(suci->schemeoutput)) {
-    buffer[encoded] = ((*(ptr + 1) - '0') << 4) | (*(ptr) - '0');
-    encoded++;
-    ptr += 2;
-  }
+  DevAssert(suci->schemeoutput);
+  size_t rawlen = strlen(suci->schemeoutput);
+  size_t outlen = (rawlen + 1) / 2;
 
-  if (strlen(suci->schemeoutput) % 2 == 1)
-    buffer[encoded++] = ((*(ptr - 1) - '0')) | 0xF0;
+  if (len - encoded < outlen)
+    return -1;
+
+  if (suci->protectionschemeId == 0) {
+    AssertFatal(suci->homenetworkpki == 0,
+                "Invalid SUCI: homenetworkpki=%u with null protection scheme (must be 0)\n",
+                suci->homenetworkpki);
+    int rc = digit_string_to_bcd_value(buffer + encoded, suci->schemeoutput, outlen);
+    AssertFatal(rc == 0,
+                "BCD encoding failed (rc=%d, input=\"%s\", len=%zu, out_len=%zu)\n",
+                rc,
+                suci->schemeoutput,
+                rawlen,
+                outlen);
+  } else {
+    int rc = hex_string_to_hex_value(buffer + encoded, suci->schemeoutput, outlen);
+    AssertFatal(rc == 0,
+                "Encoding SUCI schemeoutput failed (rc=%d, input=\"%s\", len=%zu, out_len=%zu)\n",
+                rc,
+                suci->schemeoutput,
+                rawlen,
+                outlen);
+  }
+  encoded += outlen;
   return encoded;
 }
 

@@ -5,7 +5,6 @@
 /*!
  * \brief Routines for initial UE synchronization procedure (PSS,SSS,PBCH and frame format detection)
  */
-#include "PHY/types.h"
 #include "PHY/defs_nr_UE.h"
 #include "PHY/MODULATION/modulation_UE.h"
 #include "nr_transport_proto_ue.h"

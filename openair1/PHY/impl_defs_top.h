@@ -86,7 +86,6 @@
 
 #include <common/utils/nr/nr_common.h>
 #include <common/utils/utils.h>
-#include "defs_eNB.h"
 #include "types.h"
 
 /** @addtogroup _PHY_STRUCTURES_
@@ -204,17 +203,6 @@
 
 #define AMP_OVER_SQRT2 ((AMP*ONE_OVER_SQRT2_Q15)>>15)
 #define AMP_OVER_2 (AMP>>1)
-
-#define NB_NUMEROLOGIES_NR                       (5)
-#define NR_MAX_SLOTS_PER_FRAME                   (160)                    /* number of slots per frame */
-
-/* FFS_NR_TODO it defines ue capability which is the number of slots        */
-/* - between reception of pdsch and transmission of its acknowlegment  (k1) */
-/* - between reception of un uplink grant and its related transmission (k2) */
-#define NR_UE_CAPABILITY_SLOT_RX_TO_TX (3)
-
-#define NR_MAX_ULSCH_HARQ_PROCESSES              (NR_MAX_HARQ_PROCESSES)  /* cf 38.214 6.1 UE procedure for receiving the physical uplink shared channel */
-#define NR_MAX_DLSCH_HARQ_PROCESSES              (NR_MAX_HARQ_PROCESSES)  /* cf 38.214 5.1 UE procedure for receiving the physical downlink shared channel */
 
 /// Measurement Variables
 

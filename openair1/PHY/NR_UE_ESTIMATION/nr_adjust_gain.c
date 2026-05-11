@@ -2,11 +2,9 @@
  * SPDX-License-Identifier: LicenseRef-CSSL-1.0
  */
 
-#include "PHY/types.h"
 #include "PHY/defs_nr_UE.h"
 
-void
-phy_adjust_gain_nr (PHY_VARS_NR_UE *ue, uint32_t rx_power_fil_dB, uint8_t eNB_id)
+void phy_adjust_gain_nr(PHY_VARS_NR_UE *ue, uint32_t rx_power_fil_dB, uint8_t eNB_id)
 {
 
   LOG_D(PHY,"Gain control: rssi %d (%d,%d)\n",

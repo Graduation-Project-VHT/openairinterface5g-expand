@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include "openair2/PHY_INTERFACE/IF_Module.h"
+#include "PHY/defs_eNB.h"
 #include "nfapi_interface.h"
 #include "nfapi_pnf_interface.h"
 #include <pthread.h>

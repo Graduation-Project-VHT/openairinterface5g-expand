@@ -4,6 +4,7 @@
 
 #include <dlfcn.h>
 #include "mac.h"
+#include "scenario.h"
 #include "mac_proto.h"
 #include "mac_extern.h"
 #include "assertions.h"

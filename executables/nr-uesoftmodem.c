@@ -12,25 +12,18 @@
 #include "T.h"
 #include "common/oai_version.h"
 #include "assertions.h"
-#include "PHY/types.h"
 #include "PHY/defs_nr_UE.h"
 #include "SCHED_NR_UE/defs.h"
 #include "common/ran_context.h"
 #include "common/config/config_userapi.h"
 #include "common/utils/load_module_shlib.h"
-//#undef FRAME_LENGTH_COMPLEX_SAMPLES //there are two conflicting definitions, so we better make sure we don't use it at all
 #include "common/utils/nr/nr_common.h"
-
 #include "radio/COMMON/common_lib.h"
 #include "radio/ETHERNET/if_defs.h"
-
-//#undef FRAME_LENGTH_COMPLEX_SAMPLES //there are two conflicting definitions, so we better make sure we don't use it at all
 #include "openair1/PHY/MODULATION/nr_modulation.h"
 #include "PHY/CODING/nrLDPC_coding/nrLDPC_coding_interface.h"
 #include "PHY/phy_vars_nr_ue.h"
 #include "PHY/NR_UE_TRANSPORT/nr_transport_proto_ue.h"
-#include "PHY/NR_TRANSPORT/nr_dlsch.h"
-//#include "../../SIMU/USER/init_lte.h"
 
 #include "PHY_INTERFACE/phy_interface_vars.h"
 #include "NR_IF_Module.h"
@@ -69,8 +62,6 @@ unsigned short config_frames[4] = {2,9,11,13};
 #include "executables/thread-common.h"
 
 #include "nr_nas_msg.h"
-#include <openair1/PHY/MODULATION/nr_modulation.h>
-#include "openair2/GNB_APP/gnb_paramdef.h"
 #include "actor.h"
 
 THREAD_STRUCT thread_struct;
@@ -450,7 +441,6 @@ int main(int argc, char **argv)
     LOG_I(PHY,"Intializing UE Threads for instance %d ...\n", inst);
     init_NR_UE_threads(PHY_vars_UE_g[inst][0]);
   }
-  printf("UE threads created by %ld\n", gettid());
 
   // wait for end of program
   printf("TYPE <CTRL-C> TO TERMINATE\n");
