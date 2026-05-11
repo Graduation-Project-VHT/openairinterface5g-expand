@@ -725,7 +725,7 @@ void dlsch_scheduler_pre_processor(module_id_t Mod_id,
                                     frameP,
                                     subframeP,
                                     &UE_to_sched,
-                                    4, // max_num_ue
+                                    5, // max_num_ue
                                     n_rbg_sched,
                                     rbgalloc_mask,
                                     mac->pre_processor_dl.dl_algo.data); 

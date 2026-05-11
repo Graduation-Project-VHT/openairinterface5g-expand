@@ -483,7 +483,10 @@ typedef enum { S_DL_NONE = 0, S_DL_SCHEDULED } UE_DLSCH_STATUS;
 /*!\brief  scheduler mode */
 typedef enum {
   SCHED_MODE_DEFAULT = 0, /// default cheduler
-  SCHED_MODE_FAIR_RR /// fair raund robin
+  SCHED_MODE_FAIR_RR, /// fair raund robin
+  SCHED_MODE_MAX_CI,      // Max CI!!!
+  SCHED_MODE_PF,          
+  SCHED_MODE_AI 
 } SCHEDULER_MODES;
 /*! \brief temp struct for DLSCH sched */
 typedef struct {
