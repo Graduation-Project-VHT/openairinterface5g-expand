@@ -32,6 +32,13 @@ UE_TUNNEL_IP_START  = 2           # UE0 → .2, UE1 → .3, ...
 # ── UE Identity ───────────────────────────────────────────────────────────────
 FIRST_MSIN = "0100000001"
 MAX_UES    = 10
+UE_CHANNEL_PROFILES = [
+    {"ploss_db": 0, "noise_power_db": -30},   # UE0: near,  CQI ~15
+    {"ploss_db": 0, "noise_power_db": -10},   # UE1: mid,   CQI ~10
+    {"ploss_db": 0, "noise_power_db":  -3},   # UE2: far,   CQI ~4-6
+    {"ploss_db": 0, "noise_power_db": -20},   # UE3 (spare)
+    {"ploss_db": 0, "noise_power_db": -15},   # UE4 (spare)
+]
 
 # ── iperf3 ────────────────────────────────────────────────────────────────────
 IPERF3_BASE_PORT  = 5201
@@ -56,3 +63,16 @@ def ue_port(index: int) -> int:
 
 def ue_usim_conf_filename(index: int) -> str:
     return f"lteue.usim-ci-ue{index}.conf"
+
+def ue_rfsim_conf_filename(index: int) -> str:
+    return f"lteue.rfsim-ue{index}.conf"
+
+def ue_ploss_db(index: int) -> int:
+    if index < len(UE_CHANNEL_PROFILES):
+        return UE_CHANNEL_PROFILES[index]["ploss_db"]
+    return 0
+
+def ue_noise_power_db(index: int) -> int:
+    if index < len(UE_CHANNEL_PROFILES):
+        return UE_CHANNEL_PROFILES[index]["noise_power_db"]
+    return -30  # safe fallback: good channel
