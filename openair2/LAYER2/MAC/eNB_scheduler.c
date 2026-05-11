@@ -25,6 +25,7 @@
 
 /* for fair round robin SCHED */
 #include "eNB_scheduler_fairRR.h"
+#include "eNB_scheduler_mlwdf.h"
 
 #include "intertask_interface.h"
 
@@ -961,7 +962,7 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     schedule_ue_spec_p = schedule_ue_spec_fairRR;
   } else if (eNB->scheduler_mode == SCHED_MODE_MLWDF) {
     schedule_ulsch_p = schedule_ulsch;
-    schedule_ue_spec_p = schedule_dlsch;
+    schedule_ue_spec_p = schedule_ue_spec_mlwdf;
   }
 
   if(debug_flag == 0) {
