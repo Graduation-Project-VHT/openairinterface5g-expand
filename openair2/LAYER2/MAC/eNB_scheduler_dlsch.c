@@ -467,10 +467,17 @@ void schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframe
 
     if (mbsfn_flag[CC_id] != 0)
           continue;
-        schedule_ue_spec_mlwdf(module_idP, CC_id, frameP, subframeP);
+    #ifndef SCHED_MODE_MLWDF
+    #define SCHED_MODE_MLWDF 2
+    #endif
 
-      }
+    if (RC.mac[module_idP]->scheduler_mode == SCHED_MODE_MLWDF) {
+        schedule_ue_spec_mlwdf(module_idP, CC_id, frameP, subframeP);
+    } else {
+        schedule_ue_spec(module_idP, CC_id, frameP, subframeP);
     }
+  }
+}
 
 // changes to pre-processor for eMTC
 //------------------------------------------------------------------------------
