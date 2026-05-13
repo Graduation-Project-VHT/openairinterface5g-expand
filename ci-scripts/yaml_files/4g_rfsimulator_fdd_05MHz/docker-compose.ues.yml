@@ -28,7 +28,7 @@ services:
                 --log_config.global_log_options level,nocolor,time
         volumes:
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue0.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue0.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim.conf:/opt/oai-lte-ue/etc/ue.conf
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand:/openairinterface5g
         healthcheck:
@@ -59,7 +59,7 @@ services:
                 --log_config.global_log_options level,nocolor,time
         volumes:
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue1.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue1.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim.conf:/opt/oai-lte-ue/etc/ue.conf
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand:/openairinterface5g
         healthcheck:
@@ -90,7 +90,7 @@ services:
                 --log_config.global_log_options level,nocolor,time
         volumes:
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue2.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue2.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim.conf:/opt/oai-lte-ue/etc/ue.conf
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand:/openairinterface5g
         healthcheck:
@@ -121,7 +121,7 @@ services:
                 --log_config.global_log_options level,nocolor,time
         volumes:
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue3.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue3.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim.conf:/opt/oai-lte-ue/etc/ue.conf
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand:/openairinterface5g
         healthcheck:
@@ -152,7 +152,7 @@ services:
                 --log_config.global_log_options level,nocolor,time
         volumes:
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue4.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue4.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /home/duy/Documents/GraduationProject/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim.conf:/opt/oai-lte-ue/etc/ue.conf
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
             - /home/duy/Documents/GraduationProject/openairinterface5g-expand:/openairinterface5g
         healthcheck:
