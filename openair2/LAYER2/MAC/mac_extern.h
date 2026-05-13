@@ -42,9 +42,10 @@ static const uint32_t BSR_TABLE[BSR_TABLE_SIZE] = {0,     10,    12,    14,    1
                                                    16507, 19325, 22624, 26487, 31009, 36304, 42502, 49759, 58255, 68201, 79846, 93479, 109439, 128125, 150000, 300000};
 
 // Max C/I
-extern int max_ci_dl_run(module_id_t Mod_id, int CC_id, int frame, int subframe, UE_list_t *UE_list, int max_num_ue, int n_rbg_sched, uint8_t *rbgalloc_mask, void *data);
-
-extern int max_ci_ul_run(module_id_t Mod_id, int CC_id, int frame, int subframe, int sched_frame, int sched_subframe, UE_list_t *UE_list, int max_num_ue, int num_contig_rb, contig_rbs_t *rbs, void *data);
+extern int max_ci_dl_run(module_id_t Mod_id, int CC_id, int frame, int subframe, 
+                            UE_list_t *UE_list, int max_num_ue, int n_rbg_sched, uint8_t *rbgalloc_mask, void *data);
+extern int max_ci_ul_run(module_id_t Mod_id, int CC_id, int frame, int subframe, int sched_frame, int sched_subframe, 
+                            UE_list_t *UE_list, int max_num_ue, int num_contig_rb, contig_rbs_t *rbs, void *data);
 
 extern void init_mac_scheduler_plugins(module_id_t module_idP);
 // Xuất (Expose) cấu trúc thuật toán Max C/I để các file khác lấy được
