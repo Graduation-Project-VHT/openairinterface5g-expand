@@ -1,0 +1,1 @@
+timestamp_ms,frame,subframe,rnti,direction,nb_rb,rb_util,mcs,tbs_bytes,sdu_bytes,cqi,retx,harq_pid

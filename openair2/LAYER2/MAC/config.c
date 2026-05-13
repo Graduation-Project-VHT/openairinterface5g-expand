@@ -729,26 +729,6 @@ int rrc_mac_config_req_eNB(const module_id_t Mod_idP, const rrc_mac_config_req_e
   int i;
   int UE_id = -1;
   eNB_MAC_INST *eNB = RC.mac[Mod_idP];
-  
-  char *sched_mode_str = "max_ci";
-  eNB->scheduler_mode = SCHED_MODE_DEFAULT; // Mặc định an toàn
-
-  if (sched_mode_str != NULL) {
-    if (strcmp(sched_mode_str, "fair_rr") == 0) {
-        eNB->scheduler_mode = SCHED_MODE_FAIR_RR;
-    } 
-    else if (strcmp(sched_mode_str, "max_ci") == 0) {
-        eNB->scheduler_mode = SCHED_MODE_MAX_CI;
-    } 
-    else if (strcmp(sched_mode_str, "pf") == 0) {
-        eNB->scheduler_mode = SCHED_MODE_PF;
-    }
-    else if (strcmp(sched_mode_str, "ai") == 0) {
-        eNB->scheduler_mode = SCHED_MODE_AI;
-    }
-  }
-  printf("[MAC CONFIG] Active Scheduler Mode: %d (String: %s)\n", eNB->scheduler_mode, sched_mode_str);
-  
   UE_info_t *UE_info= &eNB->UE_info;
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
