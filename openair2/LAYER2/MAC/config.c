@@ -730,26 +730,6 @@ int rrc_mac_config_req_eNB(const module_id_t Mod_idP, const rrc_mac_config_req_e
   int UE_id = -1;
   eNB_MAC_INST *eNB = RC.mac[Mod_idP];
   
-  //char *sched_mode_str = "max_ci";
-  char *sched_mode_str = "fair_rr"; // Mi đổi chữ ở đây để test nhé (max_ci hoặc fair_rr)
-
-  eNB->scheduler_mode = SCHED_MODE_DEFAULT; 
-
-  if (sched_mode_str != NULL) {
-    if (strcmp(sched_mode_str, "fair_rr") == 0 || strcmp(sched_mode_str, "default") == 0) {
-        eNB->scheduler_mode = SCHED_MODE_FAIR_RR;
-        // KHÔNG GÁN GÌ Ở ĐÂY CẢ !!!
-        // Vì FairRR dùng luồng thực thi riêng, nó đéo quan tâm con trỏ dl_algo.run đang chứa cái gì.
-    } 
-    else if (strcmp(sched_mode_str, "max_ci") == 0) {
-        eNB->scheduler_mode = SCHED_MODE_MAX_CI;
-        // MAX C/I CỦA MÌNH CHẠY TRÊN LUỒNG CHUẨN, NÊN PHẢI TRÁO CON TRỎ Ở ĐÂY:
-        eNB->pre_processor_dl.dl_algo.run = max_ci_dl_run;
-        eNB->pre_processor_ul.ul_algo.run = max_ci_ul_run;
-    } 
-  }
-  printf("[MAC CONFIG] Active Scheduler Mode: %d (String: %s)\n", eNB->scheduler_mode, sched_mode_str);
-  
   UE_info_t *UE_info= &eNB->UE_info;
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
