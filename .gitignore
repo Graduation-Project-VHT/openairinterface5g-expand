@@ -37,3 +37,6 @@ CMakeUserPresets.json
 # Python config
 *.pyc
 __pycache__/
+
+# Log results
+logs/
