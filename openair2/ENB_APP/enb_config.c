@@ -195,6 +195,10 @@ void RCconfig_macrlc(void)
       } else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr), "fairRR") == 0) {
         global_scheduler_mode=SCHED_MODE_FAIR_RR;
         printf("sched mode = fairRR %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
+      }
+      else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr), "mlwdf") == 0) {
+        global_scheduler_mode = SCHED_MODE_MLWDF;
+        printf("sched mode = mlwdf %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
       } else {
         global_scheduler_mode=SCHED_MODE_DEFAULT;
         printf("sched mode = default %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
@@ -2195,7 +2199,7 @@ int RCconfig_S1(
             }
             else
             {
-              LOG_E(S1AP, 
+              LOG_E(S1AP,
                     "s1setup_rsp_timer value in conf file is invalid (%d). Default value is set.\n",
                     *ENBParamList.paramarray[k][ENB_S1SETUP_RSP_TIMER_IDX].uptr);
               S1AP_REGISTER_ENB_REQ(msg_p).s1_setuprsp_wait_timer = 5;
@@ -2207,7 +2211,7 @@ int RCconfig_S1(
             }
             else
             {
-              LOG_E(S1AP, 
+              LOG_E(S1AP,
                     "s1setup_req_timer value in conf file is invalid (%d). Default value is set.\n",
                     *ENBParamList.paramarray[k][ENB_S1SETUP_REQ_TIMER_IDX].uptr);
               S1AP_REGISTER_ENB_REQ(msg_p).s1_setupreq_wait_timer = 5;
@@ -2219,7 +2223,7 @@ int RCconfig_S1(
             }
             else
             {
-              LOG_E(S1AP, 
+              LOG_E(S1AP,
                     "s1setup_req_count value in conf file is invalid (%d). Default value is set.\n",
                     *ENBParamList.paramarray[k][ENB_S1SETUP_REQ_COUNT_IDX].uptr);
               S1AP_REGISTER_ENB_REQ(msg_p).s1_setupreq_count = 0xffff;
@@ -2231,7 +2235,7 @@ int RCconfig_S1(
             }
             else
             {
-              LOG_E(S1AP, 
+              LOG_E(S1AP,
                     "sctp_req_timer value in conf file is invalid (%d). Default value is set.\n",
                     *ENBParamList.paramarray[k][ENB_SCTP_REQ_TIMER_IDX].uptr);
               S1AP_REGISTER_ENB_REQ(msg_p).sctp_req_timer = 180;
@@ -2243,7 +2247,7 @@ int RCconfig_S1(
             }
             else
             {
-              LOG_E(S1AP, 
+              LOG_E(S1AP,
                     "sctp_req_count value in conf file is invalid (%d). Default value is set.\n",
                     *ENBParamList.paramarray[k][ENB_SCTP_REQ_COUNT_IDX].uptr);
               S1AP_REGISTER_ENB_REQ(msg_p).sctp_req_count = 0xffff;

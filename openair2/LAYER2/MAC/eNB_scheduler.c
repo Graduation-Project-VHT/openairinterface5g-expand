@@ -952,10 +952,6 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   void (*schedule_ulsch_p)(module_id_t module_idP, frame_t frameP, sub_frame_t subframe) = NULL;
   void (*schedule_ue_spec_p)(module_id_t module_idP, frame_t frameP, sub_frame_t subframe, int *mbsfn_flag) = NULL;
 
-  #ifndef SCHED_MODE_MLWDF
-  #define SCHED_MODE_MLWDF 2
-  #endif
-
   if (eNB->scheduler_mode == SCHED_MODE_DEFAULT) {
     schedule_ulsch_p = schedule_ulsch;
     schedule_ue_spec_p = schedule_dlsch;
