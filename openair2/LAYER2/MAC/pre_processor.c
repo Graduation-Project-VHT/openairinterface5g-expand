@@ -34,46 +34,46 @@ SimulationConfig sim_config;
 // FUNCTION: generate_dynamic_cqi
 // DESCRIPTION: Giả lập sự biến thiên của kênh truyền (Fading) theo mô hình Random Walk
 // ==============================================================================
-void generate_dynamic_cqi(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP) 
-{
-    eNB_MAC_INST *eNB = RC.mac[module_idP];
-    UE_info_t *UE_info = &eNB->UE_info;
-    int CC_id = 0;
+// void generate_dynamic_cqi(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
+// {
+//     eNB_MAC_INST *eNB = RC.mac[module_idP];
+//     UE_info_t *UE_info = &eNB->UE_info;
+//     int CC_id = 0;
 
-    // Duyệt qua tất cả các UE đang active trong mạng
-    for (int UE_id = UE_info->list.head; UE_id >= 0; UE_id = UE_info->list.next[UE_id]) {
-        
-        // Đọc CQI hiện tại của UE
-        uint8_t current_cqi = UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id];
+//     // Duyệt qua tất cả các UE đang active trong mạng
+//     for (int UE_id = UE_info->list.head; UE_id >= 0; UE_id = UE_info->list.next[UE_id]) {
 
-        // Nếu mới khởi tạo (cqi = 0), set giá trị base ban đầu
-        if (current_cqi == 0 || current_cqi == 15) { // Reset khỏi giá trị lý tưởng 15
-            current_cqi = (UE_id % 2 == 0) ? 14 : 6; 
-        }
+//         // Đọc CQI hiện tại của UE
+//         uint8_t current_cqi = UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id];
 
-        // TẠO BƯỚC NHẢY FADING (Delta)
-        // Delta sẽ là -1, 0, hoặc +1
-        int delta = (rand() % 3) - 1; 
+//         // Nếu mới khởi tạo (cqi = 0), set giá trị base ban đầu
+//         if (current_cqi == 0 || current_cqi == 15) { // Reset khỏi giá trị lý tưởng 15
+//             current_cqi = (UE_id % 2 == 0) ? 14 : 6;
+//         }
 
-        int new_cqi = current_cqi + delta;
+//         // TẠO BƯỚC NHẢY FADING (Delta)
+//         // Delta sẽ là -1, 0, hoặc +1
+//         int delta = (rand() % 3) - 1;
 
-        // KIỂM SOÁT BIÊN ĐỘ (Profile của từng UE)
-        if (UE_id % 2 == 0) {
-            // PROFILE: UE Đứng im gần trạm (CQI cao: 12 -> 15)
-            if (new_cqi > 15) new_cqi = 15;
-            if (new_cqi < 12) new_cqi = 12;
-        } else {
-            // PROFILE: UE Di chuyển/Rìa trạm (CQI thấp: 3 -> 9)
-            if (new_cqi > 9) new_cqi = 9;
-            if (new_cqi < 3) new_cqi = 3;
-        }
+//         int new_cqi = current_cqi + delta;
 
-        // Ghi đè CQI mới vào bộ nhớ của Lớp MAC (OAI Architecture)
-        UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id] = new_cqi;
-        
-    }
-}
-void init_mac_scheduler_plugins(module_id_t module_idP) 
+//         // KIỂM SOÁT BIÊN ĐỘ (Profile của từng UE)
+//         if (UE_id % 2 == 0) {
+//             // PROFILE: UE Đứng im gần trạm (CQI cao: 12 -> 15)
+//             if (new_cqi > 15) new_cqi = 15;
+//             if (new_cqi < 12) new_cqi = 12;
+//         } else {
+//             // PROFILE: UE Di chuyển/Rìa trạm (CQI thấp: 3 -> 9)
+//             if (new_cqi > 9) new_cqi = 9;
+//             if (new_cqi < 3) new_cqi = 3;
+//         }
+
+//         // Ghi đè CQI mới vào bộ nhớ của Lớp MAC (OAI Architecture)
+//         UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id] = new_cqi;
+
+//     }
+// }
+void init_mac_scheduler_plugins(module_id_t module_idP)
 {
     // Đặt static flag NGAY DÒNG ĐẦU TIÊN CỦA HÀM
     static int is_already_initialized = 0;
@@ -84,14 +84,14 @@ void init_mac_scheduler_plugins(module_id_t module_idP)
     eNB_MAC_INST *mac = RC.mac[module_idP];
     LOG_I(MAC, "[INIT] Loading MAC Scheduler Plugins for Module %d...\n", module_idP);
 
-    sim_config.active_scheduler = SCHEDULER_MAX_CI; 
+    sim_config.active_scheduler = SCHEDULER_MAX_CI;
     int active_scheduler = Get_Simulation_Config_Scheduler();
 
     if (active_scheduler == SCHEDULER_MAX_CI) {
         mac->pre_processor_dl.dl_algo = max_ci_dl_algo;
         mac->pre_processor_dl.dl_algo.data = mac->pre_processor_dl.dl_algo.setup();
         LOG_I(MAC, "[INIT] Successfully loaded MAX C/I Scheduler for DOWNLINK.\n");
-    } 
+    }
 }
 
 int next_ue_list_looped(UE_list_t* list, int UE_id) {
@@ -728,7 +728,7 @@ void dlsch_scheduler_pre_processor(module_id_t Mod_id,
                                     4, // max_num_ue
                                     n_rbg_sched,
                                     rbgalloc_mask,
-                                    mac->pre_processor_dl.dl_algo.data); 
+                                    mac->pre_processor_dl.dl_algo.data);
 
 
   // the following block is meant for validation of the pre-processor to check

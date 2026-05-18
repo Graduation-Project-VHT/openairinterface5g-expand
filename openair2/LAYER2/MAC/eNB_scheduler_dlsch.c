@@ -11,6 +11,7 @@
 #include <stdio.h>
 #define _GNU_SOURCE
 
+#include "eNB_scheduler_mlwdf.h"
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_proto.h"
 #include "LAYER2/MAC/mac_extern.h"
@@ -44,6 +45,11 @@
 
 #include "common/ran_context.h"
 extern RAN_CONTEXT_t RC;
+extern int g_mlwdf_delay[];
+extern float g_mlwdf_thr[];
+extern float g_mlwdf_score[];
+extern float g_ue_qos_alpha[];
+extern int   g_ue_cqi_profile[];
 
 mac_rlc_am_muilist_t rlc_am_mui;
 
@@ -467,11 +473,11 @@ void schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframe
     }
 
     if (mbsfn_flag[CC_id] != 0)
-      continue;
+          continue;
+        schedule_ue_spec_mlwdf(module_idP, CC_id, frameP, subframeP);
 
-    schedule_ue_spec(module_idP, CC_id, frameP, subframeP);
-  }
-}
+      }
+    }
 
 // changes to pre-processor for eMTC
 //------------------------------------------------------------------------------
@@ -510,15 +516,21 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
   int total_nb_available_rb = N_RB_DL;
   nfapi_dl_config_request_body_t *dl_req = &eNB->DL_req[CC_id].dl_config_request_body;
 
-  // ADD HERE ↓
-  typedef struct {
+// Buffer struct
+typedef struct {
     long   timestamp;
     int    frame, subframe;
     rnti_t rnti;
     int    nb_rb;
     float  rb_util;
-    int    mcs, TBS, sdu_len, cqi, retx, harq_pid;
-  } csv_entry_t;
+    int    mcs, TBS, sdu_len, cqi, retx;
+    int    mlwdf_delay;
+    float  mlwdf_thr;
+    float  mlwdf_score;
+    float  qos_alpha;
+    int    cqi_profile;
+    int    harq_pid;
+} csv_entry_t;
   csv_entry_t csv_buf[MAX_MOBILES_PER_ENB];
   int csv_buf_n = 0;
   memset(csv_buf, 0, sizeof(csv_buf));
@@ -736,12 +748,14 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
               csv_buf[csv_buf_n++] = (csv_entry_t){
                   (long)(frameP * 10 + subframeP),
                   frameP, subframeP, rnti, nb_rb, rb_util,
-                  ue_template->oldmcs1[harq_pid], TBS, 0,
-                  ue_sched_ctrl->dl_cqi[0], 1, harq_pid};
+                  ue_template->oldmcs1[harq_pid], TBS,
+                  /*sdu_len=*/0, ue_sched_ctrl->dl_cqi[0], /*retx=*/1,
+                  g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
+                  g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
           else if (nb_rb > csv_buf[found].nb_rb) {
-              csv_buf[found].nb_rb = nb_rb;
-              csv_buf[found].rb_util = rb_util;
-              csv_buf[found].retx = 1;
+              csv_buf[found].nb_rb    = nb_rb;
+              csv_buf[found].rb_util  = rb_util;
+              csv_buf[found].retx     = 1;
               csv_buf[found].harq_pid = harq_pid;
           }
       }
@@ -908,12 +922,15 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
             int found = -1;
             for (int _i = 0; _i < csv_buf_n; _i++)
                 if (csv_buf[_i].rnti == rnti) { found = _i; break; }
+
             if (found < 0)
                 csv_buf[csv_buf_n++] = (csv_entry_t){
                     (long)(frameP * 10 + subframeP),
                     frameP, subframeP, rnti, nb_rb, rb_util,
-                    mcs, TBS, sdu_length_total,
-                    ue_sched_ctrl->dl_cqi[0], 0, harq_pid};
+                    mcs, TBS,
+                    sdu_length_total, ue_sched_ctrl->dl_cqi[0], /*retx=*/0,
+                    g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
+                    g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
             else if (nb_rb > csv_buf[found].nb_rb) {
                 csv_buf[found].nb_rb    = nb_rb;
                 csv_buf[found].rb_util  = rb_util;
@@ -1192,10 +1209,12 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
     for (int _i = 0; _i < csv_buf_n; _i++) {
       csv_entry_t *e = &csv_buf[_i];
       fprintf(DL_scheduler_csv,
-              "%ld,%d,%d,%x,DL,%d,%0.2f,%d,%d,%d,%d,%d,%d\n",
-              e->timestamp, e->frame, e->subframe, e->rnti,
-              e->nb_rb, e->rb_util, e->mcs, e->TBS,
-              e->sdu_len, e->cqi, e->retx, e->harq_pid);
+                      "%ld,%d,%d,%x,DL,%d,%.2f,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.4f,%d,%d\n",
+                      e->timestamp, e->frame, e->subframe, e->rnti,
+                      e->nb_rb, e->rb_util, e->mcs, e->TBS,
+                      e->sdu_len, e->cqi, e->retx,
+                      e->mlwdf_delay, e->mlwdf_thr, e->mlwdf_score,
+                      e->qos_alpha, e->cqi_profile, e->harq_pid);
     }
     fflush(DL_scheduler_csv);
   }

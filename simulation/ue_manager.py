@@ -111,6 +111,7 @@ def generate_ue_service(index: int, msin: str) -> str:
         environment:
             TZ: Europe/Paris
             ASAN_OPTIONS: detect_leaks=0
+            LD_LIBRARY_PATH: /openairinterface5g/cmake_targets/ran_build/build:/usr/local/lib
             USE_ADDITIONAL_OPTIONS: >-
                 --rfsim
                 -C 2680000000
