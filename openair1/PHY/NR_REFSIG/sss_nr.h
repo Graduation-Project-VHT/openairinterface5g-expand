@@ -16,7 +16,6 @@
 #define SSS_NR_H
 
 #include "limits.h"
-#include "PHY/types.h"
 #include "pss_nr.h"
 
 /************** DEFINE ********************************************/

@@ -706,7 +706,7 @@ typedef struct nfapi_pnf_p7_config
 	 * \return not currently used
 	 */
 	int (*dl_tti_req_fn)(gNB_L1_rxtx_proc_t *proc,nfapi_pnf_p7_config_t* config, nfapi_nr_dl_tti_request_t* req);
-	int (*dl_config_req)(L1_rxtx_proc_t *proc,nfapi_pnf_p7_config_t* config, nfapi_dl_config_request_t* req);
+	int (*dl_config_req)(nfapi_pnf_p7_config_t* config, nfapi_dl_config_request_t* req);
 	
 	/*! A callback for the UL_CONFIG.request
 	 * \param config A poiner to the PNF P7 config
@@ -714,7 +714,7 @@ typedef struct nfapi_pnf_p7_config
 	 * \return not currently used	
 	 */
 	int (*ul_tti_req_fn)(gNB_L1_rxtx_proc_t *proc,nfapi_pnf_p7_config_t* config, nfapi_nr_ul_tti_request_t* req);
-	int (*ul_config_req)(L1_rxtx_proc_t *proc,nfapi_pnf_p7_config_t* config, nfapi_ul_config_request_t* req);
+	int (*ul_config_req)(nfapi_pnf_p7_config_t* config, nfapi_ul_config_request_t* req);
 	
 	/*! A callback for the HI_DCI0.request
 	 * \param config A poiner to the PNF P7 config
@@ -722,7 +722,7 @@ typedef struct nfapi_pnf_p7_config
 	 * \return not currently used
 	 */
 	int (*ul_dci_req_fn)(gNB_L1_rxtx_proc_t *proc,nfapi_pnf_p7_config_t* config, nfapi_nr_ul_dci_request_t* req);
-	int (*hi_dci0_req)(L1_rxtx_proc_t *proc,nfapi_pnf_p7_config_t* config, nfapi_hi_dci0_request_t* req);
+	int (*hi_dci0_req)(nfapi_pnf_p7_config_t* config, nfapi_hi_dci0_request_t* req);
 
 	/*! A callback for the TX_REQ.request
 	 * \param config A poiner to the PNF P7 config

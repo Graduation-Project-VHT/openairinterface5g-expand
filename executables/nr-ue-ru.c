@@ -5,6 +5,8 @@
 #include "nr-ue-ru.h"
 #include "nr-uesoftmodem.h"
 #include "PHY/NR_UE_TRANSPORT/nr_transport_proto_ue.h"
+#include "common/config/config_paramdesc.h"
+#include "common/config/config_userapi.h"
 
 /* NR UE RU configuration section name */
 #define CONFIG_STRING_NRUE_RU_LIST "RUs"

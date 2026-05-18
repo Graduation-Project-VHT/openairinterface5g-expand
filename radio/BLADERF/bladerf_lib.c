@@ -8,6 +8,7 @@
 
 #include <libbladeRF.h>
 #include "common_lib.h"
+#include "log.h"
 
 /*! \brief BladeRF specific data structure */
 typedef struct {

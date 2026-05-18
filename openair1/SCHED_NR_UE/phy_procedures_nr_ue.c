@@ -836,8 +836,8 @@ static void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
   uint8_t is_cw0_active = dl_harq0->status;
   uint8_t is_cw1_active = dl_harq1->status;
   int nb_dlsch = 0;
-  nb_dlsch += (is_cw0_active == ACTIVE) ? 1 : 0;
-  nb_dlsch += (is_cw1_active == ACTIVE) ? 1 : 0;
+  nb_dlsch += (is_cw0_active == NR_ACTIVE) ? 1 : 0;
+  nb_dlsch += (is_cw1_active == NR_ACTIVE) ? 1 : 0;
   uint16_t nb_symb_sch = dlsch[0].dlsch_config.number_symbols;
   uint8_t dmrs_type = dlsch[0].dlsch_config.dmrsConfigType;
 
@@ -852,7 +852,7 @@ static void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
   LOG_D(PHY, "AbsSubframe %d.%d Start LDPC Decoder for CW1 [harq_pid %d] ? %d \n", frame_rx % 1024, nr_slot_rx, harq_pid, is_cw1_active);
 
   // exit dlsch procedures as there are no active dlsch
-  if (is_cw0_active != ACTIVE && is_cw1_active != ACTIVE) {
+  if (is_cw0_active != ACTIVE && is_cw1_active != NR_ACTIVE) {
     // don't wait anymore
     LOG_E(NR_PHY, "Internal error  nr_ue_dlsch_procedure() called but no active cw on slot %d, harq %d\n", nr_slot_rx, harq_pid);
     if (dlsch[0].dlsch_config.k1_feedback) {
@@ -869,7 +869,7 @@ static void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
   uint8_t *p_b[2] = {NULL};
   for (uint8_t DLSCH_id = 0; DLSCH_id < 2; DLSCH_id++) {
     NR_DL_UE_HARQ_t *dl_harq = &ue->dl_harq_processes[DLSCH_id][harq_pid];
-    if (dl_harq->status != ACTIVE) continue;
+    if (dl_harq->status != NR_ACTIVE) continue;
 
     DLSCH_ids[pdsch_id++] = DLSCH_id;
     fapi_nr_dl_config_dlsch_pdu_rel15_t *dlsch_config = &dlsch[DLSCH_id].dlsch_config;
@@ -950,9 +950,9 @@ static void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
   }
   uint32_t dlsch_bytes = a_segments * 1056;  // allocated bytes per segment
 
-  if (ue->phy_sim_dlsch_b && is_cw0_active == ACTIVE)
+  if (ue->phy_sim_dlsch_b && is_cw0_active == NR_ACTIVE)
     memcpy(ue->phy_sim_dlsch_b, p_b[0], dlsch_bytes);
-  else if (ue->phy_sim_dlsch_b && is_cw1_active == ACTIVE)
+  else if (ue->phy_sim_dlsch_b && is_cw1_active == NR_ACTIVE)
     memcpy(ue->phy_sim_dlsch_b, p_b[1], dlsch_bytes);
 
 }

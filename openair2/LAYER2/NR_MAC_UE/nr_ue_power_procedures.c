@@ -14,7 +14,7 @@
 // TODO: This should be part of mac instance
 /* TS 38.213 9.2.5.2 UE procedure for multiplexing HARQ-ACK/SR and CSI in a PUCCH */
 /* this is a counter of number of pucch format 4 per subframe */
-static int nb_pucch_format_4_in_subframes[LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] = {0};
+static int nb_pucch_format_4_in_subframes[NR_NUMBER_OF_SUBFRAMES_PER_FRAME] = {0};
 
 /* TS 38.211 Table 6.4.1.3.3.2-1: DM-RS positions for PUCCH format 3 and 4 */
 static const int nb_symbols_excluding_dmrs[11][2][2]

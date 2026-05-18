@@ -57,7 +57,7 @@ static void configure_dlsch(NR_UE_DLSCH_t *dlsch0,
     dlsch0_harq->DLround++;
   }
   downlink_harq_process(dlsch0_harq, current_harq_pid, dlsch_config_pdu->new_data_indicator, dlsch_config_pdu->rv, dlsch0->rnti_type);
-  if (dlsch0_harq->status != ACTIVE) {
+  if (dlsch0_harq->status != NR_ACTIVE) {
     // dlsch0_harq->status not ACTIVE due to false retransmission
     // Reset the following flag to skip PDSCH procedures in that case and retrasmit harq status
     dlsch0->active = false;
@@ -305,7 +305,7 @@ static void nr_ue_scheduled_response_ul(PHY_VARS_NR_UE *phy, fapi_nr_ul_config_r
                  pdu->pusch_config_pdu.tx_request_body.pdu_length);
         }
 
-        phy_data->ulsch.status = ACTIVE;
+        phy_data->ulsch.status = NR_ACTIVE;
         pdu->pdu_type = FAPI_NR_UL_CONFIG_TYPE_DONE; // not handle it any more
       } break;
 

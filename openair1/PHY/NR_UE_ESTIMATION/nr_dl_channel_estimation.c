@@ -1393,7 +1393,7 @@ void nr_pdsch_ptrs_processing(int nbRx,
   uint16_t *nb_rb           = NULL;
   int nscid = 0;
 
-  if(dlsch0_harq->status == ACTIVE) {
+  if(dlsch0_harq->status == NR_ACTIVE) {
     symbInSlot      = dlsch[0].dlsch_config.start_symbol + dlsch[0].dlsch_config.number_symbols;
     startSymbIndex  = &dlsch[0].dlsch_config.start_symbol;
     nbSymb          = &dlsch[0].dlsch_config.number_symbols;
@@ -1437,7 +1437,7 @@ void nr_pdsch_ptrs_processing(int nbRx,
       phase_per_symbol[symbol].r = 0; // Real
     }
 
-    if(dlsch0_harq->status == ACTIVE) {
+    if(dlsch0_harq->status == NR_ACTIVE) {
       if(symbol == *startSymbIndex) {
         *ptrsSymbPos = 0;
         set_ptrs_symb_idx(ptrsSymbPos,

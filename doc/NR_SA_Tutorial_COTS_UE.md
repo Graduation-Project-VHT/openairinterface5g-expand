@@ -201,7 +201,7 @@ With devices like the USRP N300 and especially the X300, there is noise in the D
 There are two possible solution that can be enabled in OAI:
 
 * `--tune-offset`: it consists in shifting away the operational bandwidth to avoid the center frequency
-* `ul_prbblacklist`: can be used to define specific PRBs that should not be used for uplink scheduling
+* `gNBs.[0].ul_prbblacklist`: can be used to define specific PRBs that should not be used for uplink scheduling
 
 A spectrum clean from the noisy PRBs will eventually result in an enhanced UL throughput.
 

@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <pthread.h>
 #include "common/utils/nr/nr_common.h"
 
 #define CRC24_A 0
@@ -19,6 +20,37 @@
 
 #define MAX_TURBO_ITERATIONS_MBSFN 8
 #define MAX_TURBO_ITERATIONS max_turbo_iterations
+
+typedef struct {
+  pthread_mutex_t mutex_failure;
+  bool failed;
+} decode_abort_t;
+
+static inline void init_abort(decode_abort_t *ab)
+{
+  int ret = pthread_mutex_init(&ab->mutex_failure, NULL);
+  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
+  ab->failed = false;
+}
+
+static inline bool check_abort(decode_abort_t *ab)
+{
+  int ret = pthread_mutex_lock(&ab->mutex_failure);
+  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
+  bool failed = ab->failed;
+  ret = pthread_mutex_unlock(&ab->mutex_failure);
+  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
+  return failed;
+}
+
+static inline void set_abort(decode_abort_t *ab, bool v)
+{
+  int ret = pthread_mutex_lock(&ab->mutex_failure);
+  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
+  ab->failed = v;
+  ret = pthread_mutex_unlock(&ab->mutex_failure);
+  AssertFatal(ret == 0, "mutex failed with %d\n", ret);
+}
 
 static inline int lenWithCrc(int nbSeg, int len)
 {

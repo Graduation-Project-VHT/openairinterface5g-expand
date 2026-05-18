@@ -22,6 +22,7 @@
 //#include <complex.h>
 #include "assertions.h"
 #include "common/utils/LOG/log.h"
+#include "common/cmake_defs.h"
 #define msg(aRGS...) LOG_D(PHY, ##aRGS)
 //use msg in the real-time thread context
 #define msg_nrt printf

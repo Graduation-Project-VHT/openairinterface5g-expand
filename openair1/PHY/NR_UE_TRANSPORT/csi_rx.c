@@ -290,9 +290,10 @@ static int nr_csi_rs_channel_estimation(
 
           // loop over frequency resource elements within a group
           for (int kp = 0; kp <= csi_mapping->kprime; kp++) {
-
-            uint16_t kinit = (fp->first_carrier_offset + rb*NR_NB_SC_PER_RB) % fp->ofdm_symbol_size;
-            uint16_t k = kinit + csi_mapping->koverline[cdm_id] + kp;
+            uint16_t kinit_rx = (fp->first_carrier_offset + rb * NR_NB_SC_PER_RB) % fp->ofdm_symbol_size;
+            uint16_t k_rx = kinit_rx + csi_mapping->koverline[cdm_id] + kp;
+            uint16_t kinit_tx = rb * NR_NB_SC_PER_RB;
+            uint16_t k_tx = kinit_tx + csi_mapping->koverline[cdm_id] + kp;
 
             // loop over time resource elements within a group
             for (int lp = 0; lp <= csi_mapping->lprime; lp++) {
@@ -300,11 +301,12 @@ static int nr_csi_rs_channel_estimation(
               uint64_t symbol_offset = symb * fp->ofdm_symbol_size;
               const c16_t *tx_csi_rs_signal = &csi_rs_generated_signal[port_tx][symbol_offset];
               const c16_t *rx_csi_rs_signal = &csi_rs_received_signal[ant_rx][symbol_offset];
-              c16_t tmp = c16MulConjShift(tx_csi_rs_signal[k], rx_csi_rs_signal[k], nr_csi_info->csi_rs_generated_signal_bits);
+              c16_t tmp =
+                  c16MulConjShift(tx_csi_rs_signal[k_tx], rx_csi_rs_signal[k_rx], nr_csi_info->csi_rs_generated_signal_bits);
               // This is not just the LS estimation for each (k,l), but also the sum of the different contributions
               // for the sake of optimizing the memory used.
-              csi_rs_ls_estimated_channel[ant_rx][port_tx][kinit].r += tmp.r;
-              csi_rs_ls_estimated_channel[ant_rx][port_tx][kinit].i += tmp.i;
+              csi_rs_ls_estimated_channel[ant_rx][port_tx][kinit_rx].r += tmp.r;
+              csi_rs_ls_estimated_channel[ant_rx][port_tx][kinit_rx].i += tmp.i;
             }
           }
         }
@@ -576,10 +578,6 @@ int nr_csi_rs_pmi_estimation(const PHY_VARS_NR_UE *ue,
   // The first column is applicable if the UE is reporting a Rank = 1, whereas the second column is applicable if the
   // UE is reporting a Rank = 2.
 
-  if (interference_plus_noise_power == 0) {
-    return 0;
-  }
-
   if (N_ports == 1) {
     // SISO case: SINR = E[|h|^2] / noise_power. No PMI to estimate.
     int64_t signal_power = 0;
@@ -599,7 +597,8 @@ int nr_csi_rs_pmi_estimation(const PHY_VARS_NR_UE *ue,
 
     if (count > 0) {
       const int64_t avg_signal_power = signal_power / count;
-      const uint32_t sinr = avg_signal_power / interference_plus_noise_power;
+      // Non RF devices like ZMQ has virtually zero noise. So here we make noise as 1 to return maximum sinr.
+      const uint32_t sinr = avg_signal_power / ((interference_plus_noise_power == 0) ? 1 : interference_plus_noise_power);
       *precoded_sinr_dB = dB_fixed(sinr);
     }
 

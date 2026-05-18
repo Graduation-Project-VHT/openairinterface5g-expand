@@ -72,8 +72,6 @@ void pdsch_processing(PHY_VARS_NR_UE *ue, const UE_nr_rxtx_proc_t *proc, nr_phy_
 
 void processSlotTX(void *arg);
 
-int8_t nr_find_ue(uint16_t rnti, PHY_VARS_eNB *phy_vars_eNB);
-
 /*! \brief UL time alignment procedures for TA application
   @param ue
   @param slot_tx

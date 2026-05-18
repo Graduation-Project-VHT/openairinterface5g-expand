@@ -8,6 +8,7 @@
 #ifndef __LTE_TRANSPORT_PROTO_UE__H__
 #define __LTE_TRANSPORT_PROTO_UE__H__
 #include "PHY/defs_UE.h"
+#include "PHY/defs_eNB.h"
 #include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 #include <math.h>
 #include "nfapi_interface.h"

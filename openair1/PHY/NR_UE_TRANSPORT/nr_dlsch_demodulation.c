@@ -994,7 +994,7 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
           dlsch0_harq->status,
           dlsch1_harq->status);
 
-    if ((dlsch0_harq->status == ACTIVE) && (dlsch1_harq->status == ACTIVE)){
+    if ((dlsch0_harq->status == NR_ACTIVE) && (dlsch1_harq->status == NR_ACTIVE)){
       codeword_TB0 = dlsch0_harq->codeword; // SV: where is this set? revisit for DL MIMO.
       codeword_TB1 = dlsch1_harq->codeword;
       dlsch0_harq = &ue->dl_harq_processes[codeword_TB0][harq_pid];
@@ -1002,14 +1002,14 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
 
       DEBUG_HARQ("[DEMOD] I am assuming both TBs are active, in cw0 %d and cw1 %d \n", codeword_TB0, codeword_TB1);
 
-    } else if ((dlsch0_harq->status == ACTIVE) && (dlsch1_harq->status != ACTIVE) ) {
+    } else if ((dlsch0_harq->status == NR_ACTIVE) && (dlsch1_harq->status != NR_ACTIVE) ) {
       codeword_TB0 = dlsch0_harq->codeword;
       dlsch0_harq = &ue->dl_harq_processes[codeword_TB0][harq_pid];
       dlsch1_harq = NULL;
 
       DEBUG_HARQ("[DEMOD] I am assuming only TB0 is active, in cw %d \n", codeword_TB0);
 
-    } else if ((dlsch0_harq->status != ACTIVE) && (dlsch1_harq->status == ACTIVE)){
+    } else if ((dlsch0_harq->status != NR_ACTIVE) && (dlsch1_harq->status == NR_ACTIVE)){
       codeword_TB1 = dlsch1_harq->codeword;
       dlsch0_harq  = NULL;
       dlsch1_harq  = &ue->dl_harq_processes[codeword_TB1][harq_pid];
@@ -1023,7 +1023,7 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
       return (-1);
     }
   } else if (dlsch0_harq) {
-    if (dlsch0_harq->status == ACTIVE) {
+    if (dlsch0_harq->status == NR_ACTIVE) {
       codeword_TB0 = dlsch0_harq->codeword;
       dlsch0_harq = &ue->dl_harq_processes[0][harq_pid];
       DEBUG_HARQ("[DEMOD] I am assuming only TB0 is active\n");
@@ -1310,7 +1310,7 @@ int nr_rx_pdsch(PHY_VARS_NR_UE *ue,
   int nbSymb = 0;
   int pduBitmap = 0;
 
-  if(dlsch0_harq->status == ACTIVE) {
+  if(dlsch0_harq->status == NR_ACTIVE) {
     startSymbIdx = dlsch_config->start_symbol;
     nbSymb = dlsch_config->number_symbols;
     pduBitmap = dlsch_config->pduBitmap;

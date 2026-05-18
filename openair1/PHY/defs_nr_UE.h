@@ -19,7 +19,7 @@
 #include "CODING/nrPolar_tools/nr_polar_pbch_defs.h"
 #include "PHY/defs_nr_sl_UE.h"
 #include "openair1/PHY/nr_phy_common/inc/nr_ue_phy_meas.h"
-
+#include "common/utils/threadPool/task_ans.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -59,7 +59,6 @@
 //       (0  + 0 * 20) % 512 = 0
 #define NUM_PROCESS_SLOT_TX_BARRIERS 512
 
-#include "impl_defs_top.h"
 #include "impl_defs_nr.h"
 #include "time_meas.h"
 #include "PHY/CODING/coding_defs.h"
@@ -67,6 +66,7 @@
 #include "PHY/TOOLS/tools_defs.h"
 #include "common/platform_types.h"
 #include "NR_UE_TRANSPORT/nr_transport_ue.h"
+#include "openair1/PHY/defs_common.h"
 
 #if defined(UPGRADE_RAT_NR)
   #include "PHY/NR_REFSIG/ss_pbch_nr.h"
@@ -338,8 +338,8 @@ typedef struct PHY_VARS_NR_UE_s {
   NR_UE_PRACH *prach_vars[NUMBER_OF_CONNECTED_gNB_MAX];
   NR_UE_PRS *prs_vars[NR_MAX_PRS_COMB_SIZE];
   uint8_t prs_active_gNBs;
-  NR_DL_UE_HARQ_t  dl_harq_processes[2][NR_MAX_DLSCH_HARQ_PROCESSES];
-  NR_UL_UE_HARQ_t  ul_harq_processes[NR_MAX_ULSCH_HARQ_PROCESSES];
+  NR_DL_UE_HARQ_t dl_harq_processes[2][NR_MAX_HARQ_PROCESSES];
+  NR_UL_UE_HARQ_t ul_harq_processes[NR_MAX_HARQ_PROCESSES];
 
   // Scrambling IDs used in PUSCH DMRS
   c16_t X_u[64][839];

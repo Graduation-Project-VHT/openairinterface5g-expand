@@ -37,7 +37,6 @@
 #include "openair2/LAYER2/NR_MAC_gNB/nr_mac_gNB.h"
 #include "executables/lte-softmodem.h"
 #include "openair1/PHY/defs_gNB.h"
-
 #include "common/ran_context.h"
 #include "openair2/PHY_INTERFACE/queue_t.h"
 #include "gnb_ind_vars.h"
@@ -1710,6 +1709,7 @@ void configure_nr_nfapi_vnf(eth_params_t params)
   vnf->p7_vnfs[0].aperiodic_timing_enabled = 0;
   vnf->p7_vnfs[0].periodic_timing_period = 1;
   vnf->p7_vnfs[0].config = nfapi_vnf_p7_config_create();
+  AssertFatal(params.remote_portc == 0 && params.remote_portd == 0, "remote ports not used, use 0\n");
 #ifndef ENABLE_AERIAL
   NFAPI_TRACE(NFAPI_TRACE_INFO,
               "[VNF] %s() vnf->p7_vnfs[0].config:%p VNF ADDRESS:%s:%d\n",

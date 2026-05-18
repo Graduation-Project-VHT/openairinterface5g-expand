@@ -1100,6 +1100,9 @@ typedef struct {
   UE_list_t list;
   int num_UEs;
   bool active[MAX_MOBILES_PER_ENB];
+
+  // For controlling more than maximum RB allocation issue
+  pthread_mutex_t UE_list_mutex;
 } UE_info_t;
 
 /*! \brief deleting control information*/

@@ -41,7 +41,7 @@ typedef struct {
   uint8_t spare6: 1;
   uint8_t protectionschemeId: 4;
   uint8_t homenetworkpki;
-  char schemeoutput[32];
+  char schemeoutput[128];
 } Suci5GSMobileIdentity_t;
 
 typedef struct {

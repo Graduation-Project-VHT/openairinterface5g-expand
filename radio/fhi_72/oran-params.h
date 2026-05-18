@@ -7,6 +7,7 @@
 
 #include "stdbool.h"
 #include "stdint.h"
+#include "common/config/config_userapi.h"
 
 #define CONFIG_STRING_ORAN "fhi_72"
 

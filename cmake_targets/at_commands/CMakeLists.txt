@@ -80,6 +80,8 @@ add_boolean_option(NAS_BUILT_IN_UE         False  "UE NAS layer present in this 
 # SECU LIB
 ################################################################################
 set(secu_cn_SRC
+  ${OPENAIR3_DIR}/SECU/curve_25519.c
+  ${OPENAIR3_DIR}/SECU/x963_kdf.c
   ${OPENAIR3_DIR}/SECU/aes_128_ctr.c
   ${OPENAIR3_DIR}/SECU/aes_128_cbc_cmac.c
   ${OPENAIR3_DIR}/SECU/sha_256_hmac.c 

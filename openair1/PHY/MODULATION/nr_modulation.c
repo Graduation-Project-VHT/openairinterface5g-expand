@@ -454,9 +454,9 @@ void nr_layer_mapping(int nbCodes,
 	tx0++;
         *(uint32_t *)tx1 = vgetq_lane_u32(d4, 1); 
 	tx1++;
-        *(uint32_t *)tx2 = vgetq_lane_u32(d4, 0); 
+        *(uint32_t *)tx2 = vgetq_lane_u32(d4, 2); 
 	tx2++;
-        *(uint32_t *)tx3 = vgetq_lane_u32(d4, 1); 
+        *(uint32_t *)tx3 = vgetq_lane_u32(d4, 3); 
 	tx3++;
       }
 #endif

@@ -1615,25 +1615,25 @@ void schedule_ulsch_rnti(module_id_t module_idP, int CC_id, frame_t frameP, sub_
         T_INT(ndi));
 
       // UL Scheduler logging after mcs
-      if (UL_scheduler_csv && rb_table[rb_table_index] > 0) {
+      // if (UL_scheduler_csv && rb_table[rb_table_index] > 0) {
 
-        uint32_t ul_tbs_bytes = UE_template_ptr->TBS_UL[harq_pid];
-        // No need right now
-        // uint32_t ul_throughput_kbps = ul_tbs_bytes * 8U;
+      //   uint32_t ul_tbs_bytes = UE_template_ptr->TBS_UL[harq_pid];
+      //   // No need right now
+      //   // uint32_t ul_throughput_kbps = ul_tbs_bytes * 8U;
 
-        fprintf(UL_scheduler_csv,
-                "%ld,%d,%d,%x,UL,%d,%d,%d,%d,%d\n",
-                (long)(frameP * 10 + subframeP),
-                frameP,
-                subframeP,
-                rnti,
-                rb_table[rb_table_index],
-                mcs,
-                ul_tbs_bytes,
-                snr,
-                0);
-        fflush(UL_scheduler_csv);
-      }
+      //   fprintf(UL_scheduler_csv,
+      //           "%ld,%d,%d,%x,UL,%d,%d,%d,%d,%d\n",
+      //           (long)(frameP * 10 + subframeP),
+      //           frameP,
+      //           subframeP,
+      //           rnti,
+      //           rb_table[rb_table_index],
+      //           mcs,
+      //           ul_tbs_bytes,
+      //           snr,
+      //           0);
+      //   fflush(UL_scheduler_csv);
+      // }
 
       /* Store information for possible retransmission */
       UE_template_ptr->nb_rb_ul[harq_pid] = rb_table[rb_table_index];

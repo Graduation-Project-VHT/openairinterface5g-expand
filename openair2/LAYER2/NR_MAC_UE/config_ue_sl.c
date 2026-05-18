@@ -172,10 +172,10 @@ static void  sl_prepare_phy_config(int module_id,
   phycfg->sl_bwp_config.sl_start_symbol = (bwp_generic->sl_StartSymbol_r16) ?
                                                   *bwp_generic->sl_StartSymbol_r16 : 0;
 
-  //0-EXTENDED, 1-NORMAL CP
-  phycfg->sl_bwp_config.sl_cyclic_prefix = (sl_bwp->cyclicPrefix) ? EXTENDED : NORMAL;
+  //0-NORMAL CP, 1-EXTENDED
+  phycfg->sl_bwp_config.sl_cyclic_prefix = (sl_bwp->cyclicPrefix) ? 1 : 0;
 
-  AssertFatal(phycfg->sl_bwp_config.sl_cyclic_prefix == NORMAL, "Only NORMAL-CP Supported. Ext CP not yet supported\n");
+  AssertFatal(phycfg->sl_bwp_config.sl_cyclic_prefix == 0, "Only NORMAL-CP Supported. Ext CP not yet supported\n");
 
 
   AssertFatal(phycfg->sl_bwp_config.sl_start_symbol >= 0 && phycfg->sl_bwp_config.sl_start_symbol <=7,

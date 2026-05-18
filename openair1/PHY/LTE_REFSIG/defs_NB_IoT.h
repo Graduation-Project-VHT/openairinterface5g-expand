@@ -41,10 +41,6 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT  *phy_vars_eNB,
                      		unsigned char 		 p,
 					 		unsigned short 		 RB_IoT_ID); 
 
-
-unsigned int lte_gold_generic_NB_IoT(unsigned int  *x1,
-									 unsigned int  *x2,
-									 unsigned char reset);
 		
 void generate_ul_ref_sigs_rx_NB_IoT(void);
 
