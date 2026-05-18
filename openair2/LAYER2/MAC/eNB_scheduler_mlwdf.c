@@ -12,7 +12,7 @@
 extern RAN_CONTEXT_t RC;
 
 // Declare the original OAI scheduling function to be called in Phase 3
-extern void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_frame_t subframeP);
+extern void schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, int *mbsfn_flag);
 
 // ========================================================================
 // GLOBAL VARIABLES (Log bridge & Fixed Profile Storage for UEs)
@@ -31,18 +31,9 @@ mlwdf_ue_stats_t mlwdf_stats[MAX_MOBILES_PER_ENB];
 // INITIALIZATION FUNCTION: [TEST SCENARIO] Random QoS (5 Levels) & Random CQI
 // ========================================================================
 void init_mlwdf_scheduler(void) {
-    // Automatically clean up the log file
-    FILE *f = fopen("DL_scheduler_log.csv", "w");
-    if (f != NULL) {
-        fprintf(f, "timestamp_ms,frame,subframe,rnti,direction,nb_rb,mcs,tbs_bytes,cqi,retx,hol_delay_ms,avg_thr_kbps,mlwdf_score,qos_alpha,cqi_profile\n");
-        fclose(f);
-    } else {
-        printf("[MAC-MLWDF] ERROR: Cannot create or overwrite DL_scheduler_log.csv!\n");
-    }
-
-    printf("\n======================================================\n");
-    printf("[MAC-MLWDF] INITIALIZING TEST SCENARIO: 5 RANDOM QoS & RANDOM CQI\n");
-    printf("======================================================\n");
+    LOG_I(MAC, "\n======================================================\n");
+    LOG_I(MAC, "[MAC-MLWDF] INITIALIZING TEST SCENARIO: 5 RANDOM QoS & RANDOM CQI\n");
+    LOG_I(MAC, "======================================================\n");
 
     // Seed the random number generator
     srand(time(NULL));
@@ -67,10 +58,10 @@ void init_mlwdf_scheduler(void) {
         g_ue_cqi_profile[i] = rand() % 3;
 
         // Print initialization logs to confirm random assignment
-        printf("[MLWDF-INIT] Slot UE_ID %d | Random QoS Alpha: %.1f | Random CQI Profile: %d\n",
+        LOG_I(MAC, "[MLWDF-INIT] Slot UE_ID %d | Random QoS Alpha: %.1f | Random CQI Profile: %d\n",
                i, g_ue_qos_alpha[i], g_ue_cqi_profile[i]);
     }
-    printf("======================================================\n\n");
+    LOG_I(MAC, "======================================================\n\n");
 }
 
 // ========================================================================
@@ -82,18 +73,40 @@ void generate_dynamic_cqi(module_id_t module_idP) {
     return;
 }
 
-// QoS Aware M-LWDF Scheduling Function
-void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, sub_frame_t subframeP) {
+// ========================================================================
+// MAIN FUNCTION: QoS Aware M-LWDF Scheduling
+// ========================================================================
+void schedule_ue_spec_mlwdf(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, int *mbsfn_flag) {
 
+    // ===================================================================
+    // CHỐT CHẶN 1: BẢO VỆ CON TRỎ MAC (Chống Race Condition từ luồng PHY)
+    // ===================================================================
+    if (RC.mac == NULL || RC.mac[module_idP] == NULL) {
+        return; // Nếu bộ nhớ Tầng MAC chưa sẵn sàng, bỏ qua ngay TTI này!
+    }
+
+    eNB_MAC_INST *eNB = RC.mac[module_idP];
+
+    // ===================================================================
+    // CHỐT CHẶN WARM-UP (LÁ CHẮN THỜI GIAN)
+    // Né 100 frame đầu tiên (1 giây) cực kỳ bất ổn của hệ thống OAI.
+    // ===================================================================
+    if (frameP < 100) {
+        int orig_mode = eNB->scheduler_mode;
+        eNB->scheduler_mode = 0; // Tạm ép về Default (0) để khởi động an toàn
+        schedule_dlsch(module_idP, frameP, subframeP, mbsfn_flag);
+        eNB->scheduler_mode = orig_mode; // Trả lại chế độ M-LWDF
+        return;
+    }
+
+    int CC_id = 0;
     static int is_mlwdf_initialized = 0;
     if (is_mlwdf_initialized == 0) {
         init_mlwdf_scheduler();
         is_mlwdf_initialized = 1;
     }
 
-    eNB_MAC_INST *eNB = RC.mac[module_idP];
     UE_info_t *UE_info = &eNB->UE_info;
-
     int num_active_ues = 0;
     int ue_id;
     mlwdf_ue_stats_t current_sched_list[MAX_MOBILES_PER_ENB];
@@ -116,7 +129,14 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, s
 
             // 1. Get real rate for actual physical data transmission
             uint8_t cqi = ue_sched_ctrl->dl_cqi[CC_id];
-            if (cqi == 0) cqi = 5;
+
+            // ===================================================================
+            // CHỐT CHẶN 2: BẢO VỆ MẢNG CQI (Chống rác bộ nhớ làm văng index)
+            // ===================================================================
+            if (cqi == 0 || cqi > 15) {
+                cqi = 5; // Ép về giá trị an toàn nếu biến cqi chứa rác
+            }
+
             uint8_t mcs = cqi_to_mcs[cqi];
             uint32_t real_tbs = get_TBS_DL(mcs, 1);
 
@@ -215,12 +235,21 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, s
                 (0.99 * mlwdf_stats[id].avg_throughput_kbps) + (0.01 * assumed_tx_kbps);
 
             // Prevent Divide-by-zero error
-            if (mlwdf_stats[id].avg_throughput_kbps < 0.1) {
-                mlwdf_stats[id].avg_throughput_kbps = 0.1;
+            if (mlwdf_stats[id].avg_throughput_kbps < 10.0) {
+                mlwdf_stats[id].avg_throughput_kbps = 10.0;
             }
         }
     }
 
+    // ===================================================================
+    // CÚ LỪA THẾ KỶ (THE MODE TRICK)
+    // Đánh lừa bộ máy OAI rằng nó đang chạy Default để nó chịu cấp phát PRB
+    // ===================================================================
+    int original_mode = eNB->scheduler_mode;
+    eNB->scheduler_mode = 0;
+
     // 3. Call the original OAI scheduler function
-    schedule_ue_spec(module_idP, CC_id, frameP, subframeP);
+    schedule_dlsch(module_idP, frameP, subframeP, mbsfn_flag);
+
+    eNB->scheduler_mode = original_mode; // Lấy lại thân phận MLWDF (2)
 }

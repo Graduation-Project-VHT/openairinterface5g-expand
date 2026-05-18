@@ -20,6 +20,6 @@ typedef struct {
 void init_mlwdf_scheduler(void);
 
 // Hàm lập lịch chính của thuật toán M-LWDF (Đã chuẩn hóa tham số)
-void schedule_ue_spec_mlwdf(module_id_t module_idP, int CC_id, frame_t frameP, sub_frame_t subframeP);
+void schedule_ue_spec_mlwdf(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, int *mbsfn_flag);
 
 #endif // ENB_SCHEDULER_MLWDF_H

@@ -195,9 +195,10 @@ void RCconfig_macrlc(void)
       } else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr), "fairRR") == 0) {
         global_scheduler_mode=SCHED_MODE_FAIR_RR;
         printf("sched mode = fairRR %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
-      } else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr), "mlwdf") == 0) {
-          global_scheduler_mode = SCHED_MODE_MLWDF;
-          LOG_I(ENB_APP, "sched mode = mlwdf %d [%s]\n", global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
+      }
+      else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr), "mlwdf") == 0) {
+        global_scheduler_mode = SCHED_MODE_MLWDF;
+        printf("sched mode = mlwdf %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
       } else {
         global_scheduler_mode=SCHED_MODE_DEFAULT;
         printf("sched mode = default %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
