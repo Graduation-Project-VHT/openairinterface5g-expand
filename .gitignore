@@ -39,4 +39,4 @@ CMakeUserPresets.json
 __pycache__/
 
 # Log results
-logs/
+logs/*

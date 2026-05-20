@@ -41,7 +41,7 @@
 extern RAN_CONTEXT_t RC;
 
 // Thêm khai báo hàm ở đầu file hoặc lấy từ header
-extern void generate_dynamic_cqi(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP);
+// extern void generate_dynamic_cqi(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP);
 
 static const uint16_t pdcch_order_table[6] = {31, 31, 511, 2047, 2047, 8191};
 
@@ -950,8 +950,8 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
 
   // Hàm này sẽ giả lập lớp PHY vừa báo cáo CQI mới của các UE lên MAC
   // Only call once, not per TTI
-  generate_dynamic_cqi(module_idP, frameP, subframeP);
-  init_mac_scheduler_plugins(module_idP);
+  // generate_dynamic_cqi(module_idP, frameP, subframeP);
+  // init_mac_scheduler_plugins(module_idP);
 
   static int debug_flag = 0;
   void (*schedule_ulsch_p)(module_id_t module_idP, frame_t frameP, sub_frame_t subframe) = NULL;
