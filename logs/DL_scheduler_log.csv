@@ -1,0 +1,1 @@
+timestamp_ms,frame,subframe,rnti,direction,nb_rb,rb_util,mcs,tbs_bytes,sdu_bytes,cqi,retx,hol_delay_ms,avg_thr_kbps,mlwdf_score,qos_alpha,cqi_profile,harq_pid
