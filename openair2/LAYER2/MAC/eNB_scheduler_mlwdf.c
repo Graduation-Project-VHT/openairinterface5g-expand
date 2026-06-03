@@ -43,7 +43,7 @@ void init_mlwdf_scheduler(void) {
 
     for (int i = 0; i < MAX_MOBILES_PER_ENB; i++) {
         mlwdf_stats[i].rnti = 0;
-        mlwdf_stats[i].avg_throughput_kbps = 1.0;
+        mlwdf_stats[i].avg_throughput_kbps = 1000.0;
         mlwdf_stats[i].hol_delay_ms = 0;
 
         g_mlwdf_delay[i] = 0;
@@ -55,7 +55,8 @@ void init_mlwdf_scheduler(void) {
         g_ue_qos_alpha[i] = possible_qos[random_qos_index];
 
         // Randomly assign Radio Condition Profile (0: Center, 1: Mid, 2: Edge)
-        g_ue_cqi_profile[i] = rand() % 3;
+        // We don't need this anymore since we are using the CQI value from the physical layer
+        // g_ue_cqi_profile[i] = rand() % 3;
 
         // Print initialization logs to confirm random assignment
         LOG_I(MAC, "[MLWDF-INIT] Slot UE_ID %d | Random QoS Alpha: %.1f | Random CQI Profile: %d\n",
@@ -143,23 +144,50 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, frame_t frameP, sub_frame_t 
             // =========================================================
             // APPLY VIRTUAL RATE BASED ON RANDOMIZED PROFILE
             // =========================================================
-            float virtual_rate = real_tbs * 8.0;
+            /* ── Derive cqi_profile from actual measured CQI ──────────────────
+             * Updated every TTI so the CSV label always reflects the real
+             * channel condition, not a stale random assignment from init.
+             * Thresholds follow 3GPP CQI modulation boundaries:
+             *   12–15 → 64QAM  → profile 0 (Center)
+             *    7–11 → 16QAM  → profile 1 (Mid)
+             *    0–6  → QPSK   → profile 2 (Edge)
+             * ─────────────────────────────────────────────────────────────── */
+            if (cqi >= 12) {
+                g_ue_cqi_profile[ue_id] = 0;   // Center
+            } else if (cqi >= 7) {
+                g_ue_cqi_profile[ue_id] = 1;   // Mid
+            } else {
+                g_ue_cqi_profile[ue_id] = 2;   // Edge
+            }
             int profile = g_ue_cqi_profile[ue_id];
 
+            // Virtual rate multiplier now reflects actual channel quality:
+            float virtual_rate = real_tbs * 8.0;
             if (profile == 0) {
-                virtual_rate *= 1.0;  // Cell Center
+                virtual_rate *= 1.0;   // Center — full rate
             } else if (profile == 1) {
-                virtual_rate *= 0.5;  // Cell Mid
-            } else if (profile == 2) {
-                virtual_rate *= 0.1;  // Cell Edge
+                virtual_rate *= 0.5;   // Mid    — half rate
+            } else {
+                virtual_rate *= 0.1;   // Edge   — 10% rate
             }
+
+            // float virtual_rate = real_tbs * 8.0;
+            // int profile = g_ue_cqi_profile[ue_id];
+
+            // if (profile == 0) {
+            //     virtual_rate *= 1.0;  // Cell Center
+            // } else if (profile == 1) {
+            //     virtual_rate *= 0.5;  // Cell Mid
+            // } else if (profile == 2) {
+            //     virtual_rate *= 0.1;  // Cell Edge
+            // }
 
             current_sched_list[num_active_ues].inst_rate_kbps = virtual_rate;
 
             // 2. Get average throughput (EMA)
             current_sched_list[num_active_ues].avg_throughput_kbps = mlwdf_stats[ue_id].avg_throughput_kbps;
             float R_avg = current_sched_list[num_active_ues].avg_throughput_kbps;
-            if (R_avg <= 0.1) R_avg = 1.0;
+            if (R_avg <= 100.0) R_avg = 100.0;
 
             // 3. Calculate HoL (Head-of-Line) Delay
             mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(
@@ -177,6 +205,7 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, frame_t frameP, sub_frame_t 
                     delay_ms = (rlc_status.bytes_in_buffer * 8) / R_avg;
                 }
             }
+            if (delay_ms > 10000) delay_ms = 10000;
             if (delay_ms <= 0) delay_ms = 1;
             current_sched_list[num_active_ues].hol_delay_ms = delay_ms;
 

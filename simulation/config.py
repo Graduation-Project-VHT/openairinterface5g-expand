@@ -32,12 +32,13 @@ UE_TUNNEL_IP_START = 2  # UE0 → .2, UE1 → .3, ...
 # ── UE Identity ───────────────────────────────────────────────────────────────
 FIRST_MSIN = "0100000001"
 MAX_UES = 20
-# AFTER
+
 _CHANNEL_TIERS = [
-    {"ploss_db": 0, "noise_power_db": -50},  # Tier 0: centre  CQI ~14-15
-    {"ploss_db": 0, "noise_power_db": -20},  # Tier 1: mid     CQI ~10-12
-    {"ploss_db": 0, "noise_power_db": -15},  # Tier 2: edge    CQI ~6-9
+    {"ploss_db": 0, "noise_power_db": -50},  # Centre → SNR ~50 dB → CQI ~14-15
+    {"ploss_db": 0, "noise_power_db": -10},  # Mid    → SNR ~10 dB → CQI ~9-10
+    {"ploss_db": 0, "noise_power_db":  -3},  # Edge   → SNR  ~3 dB → CQI ~4-5
 ]
+
 UE_CHANNEL_PROFILES = [_CHANNEL_TIERS[i % 3] for i in range(MAX_UES)]
 
 # ── iperf3 ────────────────────────────────────────────────────────────────────
