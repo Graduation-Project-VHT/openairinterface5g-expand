@@ -10,6 +10,7 @@
 #include "common/config/config_paramdesc.h"
 #include "sctp_default_values.h"
 #include "gnb_paramdef.h"
+#include "common/config/config_userapi.h"
 
 int RCconfig_NR_NG(MessageDef *msg_p, uint32_t i)
 {

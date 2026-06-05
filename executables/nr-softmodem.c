@@ -55,7 +55,6 @@ unsigned short config_frames[4] = {2,9,11,13};
 #include "gnb_paramdef.h"
 #include "intertask_interface.h"
 #include "nfapi/oai_integration/vendor_ext.h"
-#include "nfapi_interface.h"
 #include "nfapi_nr_interface_scf.h"
 #include "ngap_gNB.h"
 #include "nr-softmodem-common.h"
@@ -595,7 +594,6 @@ int main( int argc, char **argv ) {
                          : TIME_SOURCE_REALTIME);
 
   // start the main threads
-  number_of_cards = 1;
 
   wait_gNBs();
   int sl_ahead = NFAPI_MODE == NFAPI_MODE_AERIAL ? 0 : 6;

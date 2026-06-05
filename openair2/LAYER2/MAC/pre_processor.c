@@ -11,8 +11,9 @@
 
 #include "assertions.h"
 #include "LAYER2/MAC/mac.h"
+#include "scenario.h"
+#include "mac_extern.h"
 #include "LAYER2/MAC/mac_proto.h"
-#include "LAYER2/MAC/mac_extern.h"
 #include "common/utils/LOG/log.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
@@ -24,9 +25,74 @@
 #include "common/ran_context.h"
 
 extern RAN_CONTEXT_t RC;
+SimulationConfig sim_config;
 
 #define DEBUG_eNB_SCHEDULER
 #define DEBUG_HEADER_PARSING 1
+
+// ==============================================================================
+// FUNCTION: generate_dynamic_cqi
+// DESCRIPTION: Giả lập sự biến thiên của kênh truyền (Fading) theo mô hình Random Walk
+// ==============================================================================
+// void generate_dynamic_cqi(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
+// {
+//     eNB_MAC_INST *eNB = RC.mac[module_idP];
+//     UE_info_t *UE_info = &eNB->UE_info;
+//     int CC_id = 0;
+
+//     // Duyệt qua tất cả các UE đang active trong mạng
+//     for (int UE_id = UE_info->list.head; UE_id >= 0; UE_id = UE_info->list.next[UE_id]) {
+
+//         // Đọc CQI hiện tại của UE
+//         uint8_t current_cqi = UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id];
+
+//         // Nếu mới khởi tạo (cqi = 0), set giá trị base ban đầu
+//         if (current_cqi == 0 || current_cqi == 15) { // Reset khỏi giá trị lý tưởng 15
+//             current_cqi = (UE_id % 2 == 0) ? 14 : 6;
+//         }
+
+//         // TẠO BƯỚC NHẢY FADING (Delta)
+//         // Delta sẽ là -1, 0, hoặc +1
+//         int delta = (rand() % 3) - 1;
+
+//         int new_cqi = current_cqi + delta;
+
+//         // KIỂM SOÁT BIÊN ĐỘ (Profile của từng UE)
+//         if (UE_id % 2 == 0) {
+//             // PROFILE: UE Đứng im gần trạm (CQI cao: 12 -> 15)
+//             if (new_cqi > 15) new_cqi = 15;
+//             if (new_cqi < 12) new_cqi = 12;
+//         } else {
+//             // PROFILE: UE Di chuyển/Rìa trạm (CQI thấp: 3 -> 9)
+//             if (new_cqi > 9) new_cqi = 9;
+//             if (new_cqi < 3) new_cqi = 3;
+//         }
+
+//         // Ghi đè CQI mới vào bộ nhớ của Lớp MAC (OAI Architecture)
+//         UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id] = new_cqi;
+
+//     }
+// }
+void init_mac_scheduler_plugins(module_id_t module_idP)
+{
+    // Đặt static flag NGAY DÒNG ĐẦU TIÊN CỦA HÀM
+    static int is_already_initialized = 0;
+    if (is_already_initialized == 1) return; // Nếu đã init rồi thì thoắt ngay!
+    is_already_initialized = 1;              // Đánh dấu là đã chạy
+
+    // Toàn bộ code khởi tạo và LOG nằm dưới này thì nó sẽ CHỈ CHẠY 1 LẦN
+    eNB_MAC_INST *mac = RC.mac[module_idP];
+    LOG_I(MAC, "[INIT] Loading MAC Scheduler Plugins for Module %d...\n", module_idP);
+
+    sim_config.active_scheduler = SCHEDULER_MAX_CI;
+    int active_scheduler = Get_Simulation_Config_Scheduler();
+
+    if (active_scheduler == SCHEDULER_MAX_CI) {
+        mac->pre_processor_dl.dl_algo = max_ci_dl_algo;
+        mac->pre_processor_dl.dl_algo.data = mac->pre_processor_dl.dl_algo.setup();
+        LOG_I(MAC, "[INIT] Successfully loaded MAX C/I Scheduler for DOWNLINK.\n");
+    }
+}
 
 int next_ue_list_looped(UE_list_t* list, int UE_id) {
   if (UE_id < 0)
@@ -42,6 +108,7 @@ int get_rbg_size_last(module_id_t Mod_id, int CC_id) {
   else
     return RBGsize;
 }
+
 
 bool try_allocate_harq_retransmission(module_id_t Mod_id,
                                       int CC_id,
@@ -585,8 +652,7 @@ store_dlsch_buffer(module_id_t Mod_id,
 
 
 // This function assigns pre-available RBS to each UE in specified sub-bands before scheduling is done
-void
-dlsch_scheduler_pre_processor(module_id_t Mod_id,
+void dlsch_scheduler_pre_processor(module_id_t Mod_id,
                               int CC_id,
                               frame_t frameP,
                               sub_frame_t subframeP) {
@@ -663,6 +729,7 @@ dlsch_scheduler_pre_processor(module_id_t Mod_id,
                                     n_rbg_sched,
                                     rbgalloc_mask,
                                     mac->pre_processor_dl.dl_algo.data);
+
 
   // the following block is meant for validation of the pre-processor to check
   // whether all UE allocations are non-overlapping and is not necessary for
@@ -800,7 +867,9 @@ int rr_ul_run(module_id_t Mod_id,
   AssertFatal(num_contig_rb <= 2, "cannot handle more than two contiguous RB regions\n");
   UE_info_t *UE_info = &RC.mac[Mod_id]->UE_info;
   const int max_rb = num_contig_rb > 1 ? MAX(rbs[0].length, rbs[1].length) : rbs[0].length;
+
   eNB_MAC_INST *mac = RC.mac[Mod_id];
+  const int N_RB_UL = to_prb(mac->common_channels[CC_id].ul_Bandwidth);
   /* for every UE: check whether we have to handle a retransmission (and
    * allocate, if so). If not, compute how much RBs this UE would need */
   int rb_idx_required[MAX_MOBILES_PER_ENB];
@@ -1013,9 +1082,22 @@ int rr_ul_run(module_id_t Mod_id,
       UE_TEMPLATE *UE_template = &UE_info->UE_template[CC_id][UE_id];
 
       /* MCS has been allocated previously */
-      UE_template->pre_first_nb_rb_ul = rbs[r].start;
+      // UE_template->pre_first_nb_rb_ul = rbs[r].start;
+      // UE_template->pre_allocated_rb_table_index_ul = rb_idx_given[UE_id];
+      // UE_template->pre_allocated_nb_rb_ul = rb_table[rb_idx_given[UE_id]];
+      // rbs[r].start += rb_table[rb_idx_given[UE_id]];
+      if (rbs[r].start + rb_table[rb_idx_given[UE_id]] > N_RB_UL) {
+          LOG_W(MAC, "%d.%d UL pre-proc: UE %d skipped, would exceed N_RB_UL (%d+%d>%d)\n",
+                sched_frame, sched_subframe, UE_id,
+                rbs[r].start, rb_table[rb_idx_given[UE_id]], N_RB_UL);
+          UE_template->pre_allocated_nb_rb_ul       = 0;
+          UE_template->pre_allocated_rb_table_index_ul = 0;
+          UE_template->pre_first_nb_rb_ul           = 0;
+          continue;
+      }
+      UE_template->pre_first_nb_rb_ul              = rbs[r].start;
       UE_template->pre_allocated_rb_table_index_ul = rb_idx_given[UE_id];
-      UE_template->pre_allocated_nb_rb_ul = rb_table[rb_idx_given[UE_id]];
+      UE_template->pre_allocated_nb_rb_ul          = rb_table[rb_idx_given[UE_id]];
       rbs[r].start += rb_table[rb_idx_given[UE_id]];
       LOG_D(MAC, "%4d.%d UE %d allocated %d RBs start %d new start %d\n",
             sched_frame,

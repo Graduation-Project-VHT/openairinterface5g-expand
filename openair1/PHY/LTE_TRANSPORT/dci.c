@@ -184,12 +184,12 @@ void pdcch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
   uint32_t x1 = 0, x2 = 0, s = 0;
   //LOG_D(PHY, "%s(fp, subframe:%d, e, length:%d)\n", __FUNCTION__, subframe, length);
   reset = 1;
-  // x1 is set in lte_gold_generic
+  // x1 is set in gold_generic
   x2 = (subframe<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.8.2
 
   for (i=0; i<length; i++) {
     if ((i&0x1f)==0) {
-      s = lte_gold_generic(&x1, &x2, reset);
+      s = gold_generic(&x1, &x2, reset);
       //printf("lte_gold[%d]=%x\n",i,s);
       reset = 0;
     }

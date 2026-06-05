@@ -23,7 +23,7 @@ RUN wget http://fast.dpdk.org/rel/dpdk-20.11.9.tar.xz && \
     ninja install -C build
 
 ## Build Fronthaul library
-RUN git clone https://gerrit.o-ran-sc.org/r/o-du/phy.git /opt/phy && \
+RUN git clone https://github.com/openairinterface/o-du-phy.git /opt/phy && \
     cd /opt/phy && \
     git checkout oran_f_release_v1.0 &&\
     git apply /oai-ran/cmake_targets/tools/oran_fhi_integration_patches/F/oaioran_F.patch && \

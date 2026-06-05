@@ -61,7 +61,7 @@
 
 #define MAX_MAC_INST 16
 #define BCCH_PAYLOAD_SIZE_MAX 128
-#define CCCH_PAYLOAD_SIZE_MAX 512 
+#define CCCH_PAYLOAD_SIZE_MAX 512
 #define PCCH_PAYLOAD_SIZE_MAX 128
 #define RAR_PAYLOAD_SIZE_MAX 128
 
@@ -483,7 +483,8 @@ typedef enum { S_DL_NONE = 0, S_DL_SCHEDULED } UE_DLSCH_STATUS;
 /*!\brief  scheduler mode */
 typedef enum {
   SCHED_MODE_DEFAULT = 0, /// default cheduler
-  SCHED_MODE_FAIR_RR /// fair raund robin
+  SCHED_MODE_FAIR_RR,     /// fair raund robin
+  SCHED_MODE_MLWDF        /// QoS Aware M-LWDF scheduler
 } SCHEDULER_MODES;
 /*! \brief temp struct for DLSCH sched */
 typedef struct {
@@ -1099,6 +1100,9 @@ typedef struct {
   UE_list_t list;
   int num_UEs;
   bool active[MAX_MOBILES_PER_ENB];
+
+  // For controlling more than maximum RB allocation issue
+  pthread_mutex_t UE_list_mutex;
 } UE_info_t;
 
 /*! \brief deleting control information*/

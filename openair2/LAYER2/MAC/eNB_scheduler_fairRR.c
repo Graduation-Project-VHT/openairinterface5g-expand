@@ -26,6 +26,7 @@
 #include "rlc.h"
 #include "common/utils/lte/prach_utils.h"
 #include "T.h"
+#include "scheduler_log.h"
 
 
 #ifdef PHY_TX_THREAD
@@ -1106,6 +1107,18 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
        return;
   }
 
+  // CSV buffer — declared at function scope, reset per CC_id in loop 2
+  typedef struct {
+    long   timestamp;
+    int    frame, subframe;
+    rnti_t rnti;
+    int    nb_rb;
+    float  rb_util;
+    int    mcs, TBS, sdu_len, cqi, retx, harq_pid;
+  } csv_entry_t;
+  csv_entry_t csv_buf[MAX_MOBILES_PER_ENB];
+  int csv_buf_n = 0;
+
   start_meas(&eNB->schedule_dlsch);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
   (VCD_SIGNAL_DUMPER_FUNCTIONS_SCHEDULE_DLSCH, VCD_FUNCTION_IN);
@@ -1199,6 +1212,8 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_PREPROCESSOR,VCD_FUNCTION_OUT);
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+    csv_buf_n = 0;
+    memset(csv_buf, 0, sizeof(csv_buf));
     LOG_D(MAC, "doing schedule_ue_spec for CC_id %d\n",CC_id);
     dl_req        = &eNB->DL_req[CC_id].dl_config_request_body;
 
@@ -1309,6 +1324,26 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         TBS =
           get_TBS_DL(UE_info->UE_template[CC_id][UE_id].oldmcs1[harq_pid],
                      nb_rb);
+
+        // Retx logging
+        if (nb_rb > 0) {
+          const float rb_util = (float)nb_rb / N_RB_DL[CC_id] * 100.0f;
+          int _found = -1;
+          for (int _i = 0; _i < csv_buf_n; _i++)
+            if (csv_buf[_i].rnti == rnti) { _found = _i; break; }
+          if (_found < 0)
+            csv_buf[csv_buf_n++] = (csv_entry_t){
+              (long)(frameP * 10 + subframeP), frameP, subframeP, rnti,
+              nb_rb, rb_util,
+              UE_info->UE_template[CC_id][UE_id].oldmcs1[harq_pid],
+              TBS, 0, ue_sched_ctl->dl_cqi[CC_id], 1, harq_pid};
+          else if (nb_rb > csv_buf[_found].nb_rb) {
+            csv_buf[_found].nb_rb    = nb_rb;
+            csv_buf[_found].rb_util  = rb_util;
+            csv_buf[_found].retx     = 1;
+            csv_buf[_found].harq_pid = harq_pid;
+          }
+        }
 
         if (nb_rb <= nb_available_rb) {
           if (cc[CC_id].tdd_Config != NULL) {
@@ -1814,6 +1849,28 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             TBS = get_TBS_DL(mcs, nb_rb);
           }
 
+          // New Tx
+          if (nb_rb > 0) {
+            const float rb_util = (float)nb_rb / N_RB_DL[CC_id] * 100.0f;
+            int _found = -1;
+            for (int _i = 0; _i < csv_buf_n; _i++)
+              if (csv_buf[_i].rnti == rnti) { _found = _i; break; }
+            if (_found < 0)
+              csv_buf[csv_buf_n++] = (csv_entry_t){
+                (long)(frameP * 10 + subframeP), frameP, subframeP, rnti,
+                nb_rb, rb_util,
+                mcs, TBS, sdu_length_total,
+                ue_sched_ctl->dl_cqi[CC_id], 0, harq_pid};
+            else if (nb_rb > csv_buf[_found].nb_rb) {
+              csv_buf[_found].nb_rb    = nb_rb;
+              csv_buf[_found].rb_util  = rb_util;
+              csv_buf[_found].mcs      = mcs;
+              csv_buf[_found].TBS      = TBS;
+              csv_buf[_found].sdu_len  = sdu_length_total;
+              csv_buf[_found].harq_pid = harq_pid;
+            }
+          }
+
           LOG_D(MAC,
                 "dlsch_mcs before and after the rate matching = (%d, %d)\n",
                 eNB_UE_stats->dlsch_mcs1, mcs);
@@ -2057,6 +2114,17 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         set_ul_DAI(module_idP,UE_id,CC_id,frameP,subframeP);
       }
     } // UE_id loop
+    if (DL_scheduler_csv) {
+      for (int _i = 0; _i < csv_buf_n; _i++) {
+        csv_entry_t *e = &csv_buf[_i];
+        fprintf(DL_scheduler_csv,
+                "%ld,%d,%d,%x,DL,%d,%0.2f,%d,%d,%d,%d,%d,%d\n",
+                e->timestamp, e->frame, e->subframe, e->rnti,
+                e->nb_rb, e->rb_util, e->mcs, e->TBS,
+                e->sdu_len, e->cqi, e->retx, e->harq_pid);
+      }
+      fflush(DL_scheduler_csv);
+    }
   }  // CC_id loop
 
   fill_DLSCH_dci_fairRR(module_idP,frameP,subframeP,mbsfn_flag);

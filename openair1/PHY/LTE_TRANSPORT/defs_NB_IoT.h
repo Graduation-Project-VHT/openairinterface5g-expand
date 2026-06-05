@@ -17,6 +17,7 @@
 #include "common/platform_types.h"
 //#include "dci.h"
 #include "PHY/LTE_TRANSPORT/uci_NB_IoT.h"
+#include "common/cmake_defs.h"
 //#include "dci.h"
 //#include "uci.h"
 //#ifndef STANDALONE_COMPILE

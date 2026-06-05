@@ -164,7 +164,7 @@ void ulsch_modulation(int32_t **txdataF,
     return;
   }
 
-  // x1 is set in lte_gold_generic
+  // x1 is set in gold_generic
   x2 = (ulsch->rnti<<14) + (subframe<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
 
   if (harq_pid>=8) {
@@ -203,7 +203,7 @@ void ulsch_modulation(int32_t **txdataF,
 
   // scrambling (Note the placeholding bits are handled in ulsch_coding.c directly!)
   //printf("ulsch bits: ");
-  s = lte_gold_generic(&x1, &x2, 1);
+  s = gold_generic(&x1, &x2, 1);
   k=0;
 
   //printf("G %d\n",G);
@@ -224,7 +224,7 @@ void ulsch_modulation(int32_t **txdataF,
 
     }
 
-    s = lte_gold_generic(&x1, &x2, 0);
+    s = gold_generic(&x1, &x2, 0);
   }
 
   //printf("\n");

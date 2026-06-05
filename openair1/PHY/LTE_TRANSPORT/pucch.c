@@ -645,8 +645,8 @@ uint16_t pucchfmt3_Descramble( int16_t IFFTOutData_Fmt3[2][12][2],
   uint32_t x1;
   uint32_t s,s0,s1;
   cinit = (subframe + 1) * ((2 * Nid_cell + 1)<<16) + rnti;
-  s0 = lte_gold_generic(&x1,&cinit,1);
-  s1 = lte_gold_generic(&x1,&cinit,0);
+  s0 = gold_generic(&x1,&cinit,1);
+  s1 = gold_generic(&x1,&cinit,0);
   i=0;
 
   for (m=0; m<D_NSLT1SF; m++) {

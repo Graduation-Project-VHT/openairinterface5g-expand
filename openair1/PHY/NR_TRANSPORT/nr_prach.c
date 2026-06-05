@@ -27,7 +27,7 @@ void free_nr_prach_entry(prach_list_t *l, prach_item_t *p)
   pthread_mutex_unlock(&l->prach_list_mutex);
 }
 
-prach_item_t *find_nr_prach(prach_list_t *l, int frame, int slot, int nb_rx, find_type_t type)
+prach_item_t *find_nr_prach(prach_list_t *l, int frame, int slot, int nb_rx, nr_find_type_t type)
 {
   pthread_mutex_lock(&l->prach_list_mutex);
   AssertFatal(nb_rx, "Error! Number of antennas set to 0.\n");
@@ -37,7 +37,7 @@ prach_item_t *find_nr_prach(prach_list_t *l, int frame, int slot, int nb_rx, fin
     if ((*p) && (*p)->frame == frame && ((*p)->slot + (*p)->num_slots - 1) == slot)
       break;
   if (p == end) {
-    if (type == SEARCH_EXIST) {
+    if (type == NR_SEARCH_EXIST) {
       pthread_mutex_unlock(&l->prach_list_mutex);
       return NULL;
     }
@@ -67,7 +67,7 @@ prach_item_t *find_nr_prach(prach_list_t *l, int frame, int slot, int nb_rx, fin
 
 prach_item_t *nr_schedule_rx_prach(PHY_VARS_gNB *gNB, int SFN, int Slot, nfapi_nr_prach_pdu_t *prach_pdu)
 {
-  prach_item_t *prach = find_nr_prach(&gNB->prach_list, SFN, Slot, gNB->frame_parms.nb_antennas_rx, SEARCH_EXIST_OR_FREE);
+  prach_item_t *prach = find_nr_prach(&gNB->prach_list, SFN, Slot, gNB->frame_parms.nb_antennas_rx, NR_SEARCH_EXIST_OR_FREE);
   if (!prach) {
     LOG_W(PHY, "no free space for a new detected rach, discarding\n");
     return NULL;

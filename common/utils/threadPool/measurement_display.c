@@ -3,8 +3,7 @@
 */
 
 #include <common/utils/simple_executable.h>
-
-#include "thread-pool.h"
+#include "notified_fifo.h"
 
 #define SEP "\t"
 

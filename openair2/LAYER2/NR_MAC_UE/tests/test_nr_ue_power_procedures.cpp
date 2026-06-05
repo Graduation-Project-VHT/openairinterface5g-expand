@@ -691,7 +691,7 @@ TEST(test_srs_power, tpc_accumulation)
 int main(int argc, char** argv)
 {
   logInit();
-  uniqCfg = load_configmodule(argc, argv, CONFIG_ENABLECMDLINEONLY);
+  load_configmodule(argc, argv, CONFIG_ENABLECMDLINEONLY);
   g_log->log_component[MAC].level = OAILOG_DEBUG;
   g_log->log_component[NR_MAC].level = OAILOG_DEBUG;
   testing::InitGoogleTest(&argc, argv);

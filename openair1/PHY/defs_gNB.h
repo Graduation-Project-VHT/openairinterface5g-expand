@@ -13,16 +13,45 @@
 #include "defs_nr_common.h"
 #include "CODING/nrPolar_tools/nr_polar_pbch_defs.h"
 #include "openair2/NR_PHY_INTERFACE/NR_IF_Module.h"
-#include "PHY/impl_defs_top.h"
 #include "PHY/CODING/nrLDPC_coding/nrLDPC_coding_interface.h"
 #include "PHY/CODING/nrLDPC_extern.h"
 #include "PHY/CODING/nrLDPC_decoder/nrLDPC_types.h"
 #include "nfapi_nr_interface_scf.h"
+#include "common/utils/threadPool/task_ans.h"
+#include "openair1/PHY/defs_RU.h"
 
 #define MAX_NUM_RU_PER_gNB 8
 #define MAX_PUCCH0_NID 8
 #define NR_SRS_IDFT_OVERSAMP_FACTOR 2
 #define NR_SRS_DETECTION_THRESHOLD 10
+
+#define NUMBER_OF_NR_PRACH_MAX 8
+typedef struct {
+  int frame;
+  int slot;
+  int num_slots; // prach duration in slots
+  int beams[NFAPI_MAX_NUM_BG_IF];
+  nfapi_nr_prach_pdu_t pdu;
+  int rootSequenceIndex;
+  int numrootSequenceIndex;
+  int msg1_frequencystart;
+  int mu;
+  int prach_sequence_length;
+  int restricted_set;
+  int numerology_index;
+  int nb_rx;
+  c16_t (*Xu)[839];
+  time_stats_t *rx_prach;
+  c16_t (*prach_buf)[NUMBER_OF_NR_RU_PRACH_OCCASIONS_MAX][NR_PRACH_SEQ_LEN_L];
+} prach_item_t;
+
+typedef struct {
+  /// prach commands
+  prach_item_t *list[NUMBER_OF_NR_PRACH_MAX];
+  /// mutex for prach_list access
+  pthread_mutex_t prach_list_mutex;
+} prach_list_t;
+void init_prach_list(prach_list_t *);
 
 typedef struct {
   int nb_id;
@@ -329,8 +358,6 @@ typedef struct PHY_VARS_gNB_s {
   gNB_L1_proc_t proc;
   int num_RU;
   RU_t *RU_list[MAX_NUM_RU_PER_gNB];
-  /// Ethernet parameters for northbound midhaul interface
-  eth_params_t eth_params_n;
   /// Ethernet parameters for fronthaul interface
   eth_params_t eth_params;
   int rx_total_gain_dB;

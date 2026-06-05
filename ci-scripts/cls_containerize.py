@@ -483,10 +483,10 @@ class Containerize():
 			HTML.CreateHtmlTestRow('commit ' + tag, 'KO', CONST.ALL_PROCESSES_OK)
 			return False
 
-	def BuildRunTests(self, ctx, node, HTML):
+	def BuildRunTests(self, ctx, node, dockerfile, runtime_opt, ctest_opt, HTML):
 		lSourcePath = self.eNBSourceCodePath
 		logging.debug('Building on server: ' + node)
-		cmd = cls_cmd.RemoteCmd(node)
+		cmd = cls_cmd.getConnection(node)
 		cmd.cd(lSourcePath)
 
 		ret = cmd.run('hostnamectl')
@@ -513,9 +513,9 @@ class Containerize():
 			return False
 
 		# build ran-unittests image
-		dockerfile = "ci-scripts/docker/Dockerfile.unittest.ubuntu"
 		logfile = f'{lSourcePath}/cmake_targets/log/unittest-build.log'
-		ret = cmd.run(f'docker build --progress=plain --tag ran-unittests:{baseTag} --file {dockerfile} . &> {logfile}')
+		ret = cmd.run(f'docker build --progress=plain --tag ran-unittests:{baseTag} --file ci-scripts/{dockerfile} . &> {logfile}')
+
 		archiveArtifact(cmd, ctx, logfile)
 		if ret.returncode != 0:
 			logging.error(f'Cannot build unit tests')
@@ -528,7 +528,7 @@ class Containerize():
 		# I would like to run it with --rm and mount the ctest result directory to avoid 'docker cp'
 		# below, but then permissions are messed up and we can't remove the directory without sudo
 		# making the next pipeline fail
-		ret = cmd.run(f'docker run -a STDOUT --workdir /oai-ran/build/ --env LD_LIBRARY_PATH=/oai-ran/build/ --name ran-unittests ran-unittests:{baseTag} ctest --no-label-summary -j$(nproc)')
+		ret = cmd.run(f'docker run -a STDOUT {runtime_opt} --workdir /oai-ran/build/ --env LD_LIBRARY_PATH=/oai-ran/build/ --name ran-unittests ran-unittests:{baseTag} ctest --no-label-summary -j$(nproc) {ctest_opt}')
 		cmd.run('docker cp ran-unittests:/oai-ran/build/Testing/Temporary/LastTest.log .')
 		archiveArtifact(cmd, ctx, f'{lSourcePath}/LastTest.log')
 		cmd.run('docker cp ran-unittests:/oai-ran/build/Testing/Temporary/LastTestsFailed.log .')

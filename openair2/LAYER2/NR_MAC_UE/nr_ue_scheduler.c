@@ -2552,7 +2552,7 @@ void nr_ue_ul_scheduler(NR_UE_MAC_INST_t *mac, nr_uplink_indication_t *ul_info)
 
   // Schedule ULSCH only if the current frame and slot match those in ul_config_req
   // AND if a UL grant (UL DCI or Msg3) has been received (as indicated by num_pdus)
-  uint8_t ulsch_input_buffer_array[NFAPI_MAX_NUM_UL_PDU][MAX_ULSCH_PAYLOAD_BYTES];
+  uint8_t ulsch_input_buffer_array[FAPI_NR_UL_CONFIG_LIST_NUM][MAX_NUM_NR_ULSCH_SEGMENTS_PER_LAYER * NR_MAX_NB_LAYERS * 1056];
   int number_of_pdus = 0;
 
   fapi_nr_ul_config_request_pdu_t *ulcfg_pdu = lockGet_ul_iterator(mac, frame_tx, slot_tx);

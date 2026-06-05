@@ -1,10 +1,9 @@
 /*
  * SPDX-License-Identifier: LicenseRef-CSSL-1.0
  */
-
+#include <assert.h>
 #include "PHY/CODING/nrPolar_tools/nr_polar_defs.h"
 #include "PHY/sse_intrin.h"
-#include "PHY/impl_defs_top.h"
 
 // #define DEBUG_NEW_IMPL 1
 

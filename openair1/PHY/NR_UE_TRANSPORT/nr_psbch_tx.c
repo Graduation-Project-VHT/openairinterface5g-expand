@@ -7,6 +7,7 @@
 #include "PHY/NR_UE_TRANSPORT/nr_transport_proto_ue.h"
 #include "PHY/CODING/nrPolar_tools/nr_polar_psbch_defs.h"
 #include "PHY/MODULATION/nr_modulation.h"
+#include "PHY/gold.h"
 
 // #define SL_DEBUG
 
@@ -19,7 +20,7 @@
 void sl_psbch_scrambling(uint32_t *output, uint32_t id, uint16_t length)
 {
   uint32_t x1, x2, s = 0;
-  // x1 is set in lte_gold_generic
+  // x1 is set in gold_generic
   x2 = id; // C_INIT
 
 #ifdef SL_DEBUG
@@ -29,7 +30,7 @@ void sl_psbch_scrambling(uint32_t *output, uint32_t id, uint16_t length)
 #endif
 
   // get initial 32 scrambing bits
-  s = lte_gold_generic(&x1, &x2, 1);
+  s = gold_generic(&x1, &x2, 1);
 #ifdef SL_DEBUG
   printf("s: %04x\t", s);
 #endif
@@ -40,7 +41,7 @@ void sl_psbch_scrambling(uint32_t *output, uint32_t id, uint16_t length)
     output[i >> 5] ^= s;
 
     i += 32;
-    s = lte_gold_generic(&x1, &x2, 0);
+    s = gold_generic(&x1, &x2, 0);
 #ifdef SL_DEBUG
     printf("s: %04x\t", s);
 #endif

@@ -236,7 +236,7 @@ cuphydriver_config:
       pusch_ldpc_algo_index: 0
       pusch_ldpc_flags: 2
       pusch_ldpc_use_half: 1
-      pusch_nMaxPrb: 273
+      pusch_nMaxPrb: 78
       pusch_nMaxRx: 4
       ul_gain_calibration: 78.68
       lower_guard_bw: 845

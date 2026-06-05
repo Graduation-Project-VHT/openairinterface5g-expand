@@ -4,6 +4,7 @@
 
 #include "position_interface.h"
 #include "executables/nr-uesoftmodem.h"
+#include "common/config/config_userapi.h"
 
 static void read_position_coordinates(char *sectionName, position_t *position)
 {

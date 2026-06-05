@@ -1075,7 +1075,7 @@ void nr_ue_ulsch_procedures(PHY_VARS_NR_UE *UE,
 
   int harq_pid = phy_data->ulsch.pusch_pdu.pusch_data.harq_process_id;
 
-  if (phy_data->ulsch.status != ACTIVE)
+  if (phy_data->ulsch.status != NR_ACTIVE)
     return;
 
   start_meas_nr_ue_phy(UE, PUSCH_PROC_STATS);

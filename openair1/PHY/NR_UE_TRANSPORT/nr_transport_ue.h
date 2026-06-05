@@ -8,8 +8,6 @@
 #ifndef __NR_TRANSPORT_UE__H__
 #define __NR_TRANSPORT_UE__H__
 #include <limits.h>
-#include "PHY/impl_defs_top.h"
-
 #include "PHY/CODING/nrLDPC_decoder/nrLDPC_types.h"
 #include "nfapi/open-nFAPI/nfapi/public_inc/fapi_nr_ue_interface.h"
 #include "../NR_TRANSPORT/nr_transport_common_proto.h"
@@ -54,8 +52,13 @@ typedef struct {
   uint32_t Z;
 } NR_UL_UE_HARQ_t;
 
+typedef enum {
+  NR_SCH_IDLE = 0,
+  NR_ACTIVE
+} NR_SCH_status_t;
+
 typedef struct {
-  SCH_status_t status;
+  NR_SCH_status_t status;
   /// NDAPI struct for UE
   nfapi_nr_ue_pusch_pdu_t pusch_pdu;
   // UL number of harq processes
@@ -72,7 +75,7 @@ typedef struct {
   /// Indicator of first reception
   uint8_t first_rx;
   /// DLSCH status flag indicating
-  SCH_status_t status;
+  NR_SCH_status_t status;
   /// Pointer to the payload (38.212 V15.4.0 section 5.1)
   uint8_t *b;
   /// Pointers to transport block segments

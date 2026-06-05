@@ -34,9 +34,7 @@ pipeline {
     stage ("Verify Parameters") {
       steps {
         script {
-          JOB_TIMESTAMP = sh returnStdout: true, script: 'date --utc --rfc-3339=seconds | sed -e "s#+00:00##"'
-          JOB_TIMESTAMP = JOB_TIMESTAMP.trim()
-
+          env.JOB_TIMESTAMP = sh(returnStdout: true, script: 'date --utc --rfc-3339=seconds | sed -e "s#+00:00##"').trim()
           echo '\u2705 \u001B[32mVerify Parameters\u001B[0m'
           def allParametersPresent = true
 
@@ -108,6 +106,23 @@ pipeline {
             def message = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): Merge Conflicts -- Cannot perform CI"
             addGitLabMRComment comment: message
             currentBuild.result = 'FAILURE'
+          }
+        }
+      }
+    }
+    stage ("Local-Repo-Push") {
+      steps {
+        script {
+          catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+            triggerSlaveJob ('RAN-Local-Repo-Push', 'Local-Repo-Push')
+          }
+        }
+      }
+      post {
+        failure {
+          script {
+            echo "Push to local repository KO"
+            failingStages += '\n * RAN-Local-Repo-Push'
           }
         }
       }
@@ -855,25 +870,22 @@ pipeline {
 // ----  Slave Job functions
 
 def triggerSlaveJob (jobName, gitlabStatusName) {
-  if ("MERGE".equals(env.gitlabActionType)) {
-    MR_NUMBER = env.gitlabMergeRequestIid
-  } else {
-    MR_NUMBER = 'develop'
-  }
+  def MR_NUMBER = "MERGE".equals(env.gitlabActionType) ? env.gitlabMergeRequestIid : 'develop'
   // Workaround for the "cancelled" GitLab pipeline notification
   // The slave job is triggered with the propagate false so the following commands are executed
   // Its status is now PASS/SUCCESS from a stage pipeline point of view
   // localStatus variable MUST be analyzed to properly assess the status
-  localStatus = build job: jobName,
+  def localStatus = build job: jobName,
     parameters: [
       string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
+      string(name: 'SourceRepo', value: String.valueOf(env.gitlabSourceRepoHttpUrl)),
       string(name: 'eNB_Branch', value: String.valueOf(env.gitlabSourceBranch)),
       string(name: 'eNB_CommitID', value: String.valueOf(env.gitlabMergeRequestLastCommit)),
       string(name: 'eNB_MR', value: String.valueOf(MR_NUMBER)),
       booleanParam(name: 'eNB_mergeRequest', value: "MERGE".equals(env.gitlabActionType)),
       string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
     ], propagate: false
-  localResult = localStatus.getResult()
+  def localResult = localStatus.getResult()
   echo "${jobName} Slave Job status is ${localResult}"
   gitlabCommitStatus(name: gitlabStatusName) {
     if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
@@ -899,11 +911,11 @@ def triggerCN5GSlaveJob (jobName, gitlabStatusName) {
   // The slave job is triggered with the propagate false so the following commands are executed
   // Its status is now PASS/SUCCESS from a stage pipeline point of view
   // localStatus variable MUST be analyzed to properly assess the status
-  localStatus = build job: jobName,
+  def localStatus = build job: jobName,
     parameters: [
       string(name: 'FULL_RAN_TAG', value: String.valueOf(fullRanTag))
     ], propagate: false
-  localResult = localStatus.getResult()
+  def localResult = localStatus.getResult()
   echo "${jobName} Slave Job status is ${localResult}"
   gitlabCommitStatus(name: gitlabStatusName) {
     if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
@@ -911,34 +923,6 @@ def triggerCN5GSlaveJob (jobName, gitlabStatusName) {
     } else {
        error "${jobName} Slave Job is KO"
     }
-  }
-}
-
-def triggerSlaveJobNoGitLab (jobName) {
-  if ("MERGE".equals(env.gitlabActionType)) {
-    MR_NUMBER = env.gitlabMergeRequestIid
-  } else {
-    MR_NUMBER = 'develop'
-  }
-  // Workaround for the "cancelled" GitLab pipeline notification
-  // The slave job is triggered with the propagate false so the following commands are executed
-  // Its status is now PASS/SUCCESS from a stage pipeline point of view
-  // localStatus variable MUST be analyzed to properly assess the status
-  localStatus = build job: jobName,
-    parameters: [
-      string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
-      string(name: 'eNB_Branch', value: String.valueOf(env.gitlabSourceBranch)),
-      string(name: 'eNB_CommitID', value: String.valueOf(env.gitlabMergeRequestLastCommit)),
-      string(name: 'eNB_MR', value: String.valueOf(MR_NUMBER)),
-      booleanParam(name: 'eNB_mergeRequest', value: "MERGE".equals(env.gitlabActionType)),
-      string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
-    ], propagate: false
-  localResult = localStatus.getResult()
-  echo "${jobName} Slave Job status is ${localResult}"
-  if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
-     echo "${jobName} Slave Job is OK"
-  } else {
-     error "${jobName} Slave Job is KO"
   }
 }
 
@@ -957,7 +941,7 @@ def finalizeSlaveJob(jobName) {
         filter: 'test_results*.html',
         selector: lastCompleted())
       if (fileExists(fileName)) {
-        sh "sed -i -e 's#TEMPLATE_BUILD_TIME#${JOB_TIMESTAMP}#' ${fileName}"
+        sh "sed -i -e 's#TEMPLATE_BUILD_TIME#${env.JOB_TIMESTAMP}#' ${fileName}"
       } else {
         sh "echo \"could not copy results from ${jobName}, please check pipeline ${BUILD_URL}\" > ${fileName}"
       }
