@@ -51,7 +51,7 @@ services:
             APN1: oai.ipv4
             APN2: internet
             FIRST_IMSI: 208960100000001
-            NB_USERS: 10
+            NB_USERS: 20
         healthcheck:
             test: /bin/bash -c "pgrep oai_hss"
             interval: 10s
@@ -190,9 +190,11 @@ services:
             TZ: Europe/Paris
             ASAN_OPTIONS: detect_leaks=0
             USE_ADDITIONAL_OPTIONS: --rfsim --log_config.global_log_options level,nocolor,time
-        volumes: 
+            LD_LIBRARY_PATH: /openairinterface5g/cmake_targets/ran_build/build:/usr/local/lib
+        volumes:
             - ../../conf_files/enb.band7.100prb.rfsim.conf:/opt/oai-enb/etc/enb.conf
             - ../../../cmake_targets/ran_build/build/lte-softmodem:/opt/oai-enb/bin/lte-softmodem
+            - ../../../:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-softmodem"
             interval: 10s

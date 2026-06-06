@@ -4,7 +4,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent  # .../openairinterface5g/simulation/
 _OAI_ROOT = HERE.parent  # .../openairinterface5g/
 _CI = _OAI_ROOT / "ci-scripts"  # .../openairinterface5g/ci-scripts/
-_COMPOSE_DIR = _CI / "yaml_files" / "4g_rfsimulator_fdd_05MHz"
+_COMPOSE_DIR = _CI / "yaml_files" / "4g_rfsimulator_fdd_20MHz"
 
 # ── File paths ────────────────────────────────────────────────────────────────
 CONF_DIR = str(_CI / "conf_files")

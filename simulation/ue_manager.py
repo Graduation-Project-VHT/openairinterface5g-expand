@@ -115,7 +115,7 @@ def generate_ue_service(index: int, msin: str) -> str:
             USE_ADDITIONAL_OPTIONS: >-
                 --rfsim
                 -C 2680000000
-                -r 25
+                -r 100
                 --ue-rxgain 140
                 --ue-txgain 120
                 --rfsimulator.[0].serveraddr {config.ENB_IP}
