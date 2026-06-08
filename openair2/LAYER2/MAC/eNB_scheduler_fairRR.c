@@ -1114,7 +1114,13 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
     rnti_t rnti;
     int    nb_rb;
     float  rb_util;
-    int    mcs, TBS, sdu_len, cqi, retx, harq_pid;
+    int    mcs, TBS, sdu_len, cqi, retx;
+    int    mlwdf_delay;
+    float  mlwdf_thr;
+    float  mlwdf_score;
+    float  qos_alpha;
+    int    cqi_profile;
+    int    harq_pid;
   } csv_entry_t;
   csv_entry_t csv_buf[MAX_MOBILES_PER_ENB];
   int csv_buf_n = 0;
@@ -2118,10 +2124,12 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
       for (int _i = 0; _i < csv_buf_n; _i++) {
         csv_entry_t *e = &csv_buf[_i];
         fprintf(DL_scheduler_csv,
-                "%ld,%d,%d,%x,DL,%d,%0.2f,%d,%d,%d,%d,%d,%d\n",
+                "%ld,%d,%d,%x,DL,%d,%.2f,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.4f,%d,%d\n",
                 e->timestamp, e->frame, e->subframe, e->rnti,
                 e->nb_rb, e->rb_util, e->mcs, e->TBS,
-                e->sdu_len, e->cqi, e->retx, e->harq_pid);
+                e->sdu_len, e->cqi, e->retx,
+                e->mlwdf_delay, e->mlwdf_thr, e->mlwdf_score,
+                e->qos_alpha, e->cqi_profile, e->harq_pid);
       }
       fflush(DL_scheduler_csv);
     }

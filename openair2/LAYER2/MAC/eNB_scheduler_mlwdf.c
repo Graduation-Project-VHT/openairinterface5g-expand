@@ -23,7 +23,6 @@ float g_mlwdf_score[MAX_MOBILES_PER_ENB] = {0.0};
 
 // Arrays storing the assigned profiles for each UE upon eNB startup
 float g_ue_qos_alpha[MAX_MOBILES_PER_ENB] = {0.0};
-int   g_ue_cqi_profile[MAX_MOBILES_PER_ENB] = {0};
 
 mlwdf_ue_stats_t mlwdf_stats[MAX_MOBILES_PER_ENB];
 
@@ -152,14 +151,10 @@ void schedule_ue_spec_mlwdf(module_id_t module_idP, frame_t frameP, sub_frame_t 
              *    7–11 → 16QAM  → profile 1 (Mid)
              *    0–6  → QPSK   → profile 2 (Edge)
              * ─────────────────────────────────────────────────────────────── */
-            if (cqi >= 12) {
-                g_ue_cqi_profile[ue_id] = 0;   // Center
-            } else if (cqi >= 7) {
-                g_ue_cqi_profile[ue_id] = 1;   // Mid
-            } else {
-                g_ue_cqi_profile[ue_id] = 2;   // Edge
-            }
-            int profile = g_ue_cqi_profile[ue_id];
+            int profile;
+            if      (cqi >= 12) profile = 0;  // Center
+            else if (cqi >= 7)  profile = 1;  // Mid
+            else                profile = 2;  // Edge
 
             // Virtual rate multiplier now reflects actual channel quality:
             float virtual_rate = real_tbs * 8.0;
