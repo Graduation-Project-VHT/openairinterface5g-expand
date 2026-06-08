@@ -1235,10 +1235,6 @@ set (MAC_SRC
   ${MAC_DIR}/slicing/slicing.c
   ${MAC_DIR}/config.c
   ${MAC_DIR}/config_ue.c
-  ${MAC_DIR}/eNB_scheduler.c # Duy
-  ${MAC_DIR}/eNB_scheduler_dlsch.c # Duy
-  ${MAC_DIR}/eNB_scheduler_ulsch.c # Duy  
-  ${MAC_DIR}/pre_processor.c # Duy
   ${MAC_DIR}/eNB_scheduler_max_ci.c # Duy
  )
 

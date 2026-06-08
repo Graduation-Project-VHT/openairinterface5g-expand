@@ -220,14 +220,12 @@ void RCconfig_macrlc(void)
       dl_pp->dl_algo.data = dl_pp->dl_algo.setup();
       LOG_I(ENB_APP, "using default scheduler DL algo '%s'\n", dl_pp->dl_algo.name);
 
-      // ++++++++++ GHI ĐÈ THUẬT TOÁN (TRÁO NÃO) CỦA NHÓM MÌNH ++++++++++
       if (global_scheduler_mode == SCHED_MODE_MAX_CI) {
           dl_pp->dl_algo.name = "max_ci_dl_algo";
           dl_pp->dl_algo.run = max_ci_dl_run; // Tráo con trỏ hàm Downlink
           //RC.mac[j]->pre_processor_ul.ul_algo.run = max_ci_ul_run; // Tráo con trỏ hàm Uplink
           LOG_I(ENB_APP, "OVERRIDE: Successfully loaded MAX C/I Pre-processor!\n");
       }
-      // Sau này có PF hay AI thì thêm else if vào đây...
       // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     }// j=0..num_inst
   } /*else {// MacRLC_ParamList.numelt > 0 // ignore it
