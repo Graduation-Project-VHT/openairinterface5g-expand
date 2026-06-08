@@ -203,7 +203,7 @@ void RCconfig_macrlc(void)
         printf("sched mode = mlwdf %d [%s]\n",global_scheduler_mode,sched_mode_str);
       }
       else if (strcmp(sched_mode_str, "max_ci") == 0) {
-        global_scheduler_mode = SCHED_MODE_MAX_CI;
+        global_scheduler_mode = SCHED_MODE_MAXCI;
         printf("sched mode = max_ci %d [%s]\n", global_scheduler_mode, sched_mode_str);
       } else {
         global_scheduler_mode=SCHED_MODE_DEFAULT;
@@ -220,7 +220,7 @@ void RCconfig_macrlc(void)
       dl_pp->dl_algo.data = dl_pp->dl_algo.setup();
       LOG_I(ENB_APP, "using default scheduler DL algo '%s'\n", dl_pp->dl_algo.name);
 
-      if (global_scheduler_mode == SCHED_MODE_MAX_CI) {
+      if (global_scheduler_mode == SCHED_MODE_MAXCI) {
           dl_pp->dl_algo.name = "max_ci_dl_algo";
           dl_pp->dl_algo.run = max_ci_dl_run; // Tráo con trỏ hàm Downlink
           //RC.mac[j]->pre_processor_ul.ul_algo.run = max_ci_ul_run; // Tráo con trỏ hàm Uplink
