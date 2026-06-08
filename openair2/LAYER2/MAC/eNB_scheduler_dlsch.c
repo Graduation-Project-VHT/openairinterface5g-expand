@@ -758,7 +758,7 @@ typedef struct {
                   ue_template->oldmcs1[harq_pid], TBS,
                   /*sdu_len=*/0, ue_sched_ctrl->dl_cqi[0], /*retx=*/1,
                   g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
-                  g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
+                  g_ue_qos_alpha[UE_id], cqi_prof, harq_pid};
           else if (nb_rb > csv_buf[found].nb_rb) {
               csv_buf[found].nb_rb    = nb_rb;
               csv_buf[found].rb_util  = rb_util;
@@ -941,7 +941,7 @@ typedef struct {
                     mcs, TBS,
                     sdu_length_total, ue_sched_ctrl->dl_cqi[0], /*retx=*/0,
                     g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
-                    g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
+                    g_ue_qos_alpha[UE_id], cqi_prof, harq_pid};
             else if (nb_rb > csv_buf[found].nb_rb) {
                 csv_buf[found].nb_rb    = nb_rb;
                 csv_buf[found].rb_util  = rb_util;
