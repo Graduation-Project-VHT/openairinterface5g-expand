@@ -57,11 +57,7 @@ void init_mlwdf_scheduler(void) {
         // We don't need this anymore since we are using the CQI value from the physical layer
         // g_ue_cqi_profile[i] = rand() % 3;
 
-        // Print initialization logs to confirm random assignment
-        LOG_I(MAC, "[MLWDF-INIT] Slot UE_ID %d | Random QoS Alpha: %.1f | Random CQI Profile: %d\n",
-               i, g_ue_qos_alpha[i], g_ue_cqi_profile[i]);
     }
-    LOG_I(MAC, "======================================================\n\n");
 }
 
 // ========================================================================
