@@ -971,7 +971,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     schedule_ulsch_p = schedule_ulsch;
     schedule_ue_spec_p = schedule_ue_spec_mlwdf;
   }
-  else if (eNB->scheduler_mode == SHED_MODE_MAXCI) {
+  else if (eNB->scheduler_mode == SCHED_MODE_MAXCI) {
     schedule_ulsch_p   = schedule_ulsch;
     schedule_ue_spec_p = schedule_dlsch;
   }
