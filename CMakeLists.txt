@@ -1752,7 +1752,7 @@ target_link_libraries(lte-softmodem PRIVATE
 target_link_libraries(lte-softmodem PRIVATE pthread m CONFIG_LIB rt)
 target_link_libraries(lte-softmodem PRIVATE ${T_LIB})
 target_link_libraries(lte-softmodem PRIVATE asn1_nr_rrc_hdrs asn1_lte_rrc_hdrs)
-target_link_libraries(lte-softmodem PRIVATE ${OPENAIR_DIR}/cmake_targets/ran_build/build/libonnxruntime.so)
+target_link_libraries(lte-softmodem PRIVATE ${OPENAIR_DIR}/third_party/onnxruntime/lib/libonnxruntime.so)
 
 if(E2_AGENT)
   target_link_libraries(lte-softmodem PUBLIC e2_agent e2_agent_arg e2_ran_func_du_cucp_cuup)
