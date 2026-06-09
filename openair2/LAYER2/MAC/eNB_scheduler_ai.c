@@ -68,17 +68,23 @@ static float g_hol_delay_ms[MAX_MOBILES_PER_ENB] = {0.0f};
 /* Track whether the scheduler has been initialized */
 static int g_initialized = 0;
 
+// Stores tensor name
+static char g_input_name[128]  = {0};
+static char g_output_name[128] = {0};
+
 /* =========================================================================
  * Helper: fatal ORT error check
  * ========================================================================= */
-static void _ort_check(OrtStatus *status, const char *context)
+static int _ort_check(OrtStatus *status, const char *context)
 {
     if (status != NULL) {
         const char *msg = g_ort->GetErrorMessage(status);
         LOG_E(MAC, "[AI_SCHED] ONNX Runtime error in %s: %s\n", context, msg);
         g_ort->ReleaseStatus(status);
         AssertFatal(0, "[AI_SCHED] Fatal ONNX error — cannot continue.\n");
+        return 1;
     }
+    return 0;
 }
 
 /* =========================================================================
@@ -96,28 +102,46 @@ void init_ai_scheduler(void)
 
     /* Get the global ORT API struct */
     g_ort = OrtGetApiBase()->GetApi(ORT_API_VERSION);
-    AssertFatal(g_ort != NULL, "[AI_SCHED] Failed to get ORT API.\n");
+    if (g_ort == NULL) {
+        LOG_E(MAC, "[AI_SCHED] Failed to get ORT API.\n");
+        return;
+    }
 
-    /* Create environment (manages thread pools and logging) */
-    _ort_check(g_ort->CreateEnv(ORT_LOGGING_LEVEL_WARNING, "sched_ai", &g_env),
-               "CreateEnv");
+    if (_ort_check(g_ort->CreateEnv(ORT_LOGGING_LEVEL_WARNING, "sched_ai", &g_env),
+                    "CreateEnv") != 0) return;
 
-    /* Session options: single-thread inference to fit inside 1ms TTI budget */
-    _ort_check(g_ort->CreateSessionOptions(&g_opts), "CreateSessionOptions");
-    _ort_check(g_ort->SetIntraOpNumThreads(g_opts, 1), "SetIntraOpNumThreads");
-    _ort_check(g_ort->SetInterOpNumThreads(g_opts, 1), "SetInterOpNumThreads");
+    if (_ort_check(g_ort->CreateSessionOptions(&g_opts), "CreateSessionOptions") != 0) return;
+    if (_ort_check(g_ort->SetIntraOpNumThreads(g_opts, 1), "SetIntraOpNumThreads") != 0) return;
+    if (_ort_check(g_ort->SetInterOpNumThreads(g_opts, 1), "SetInterOpNumThreads") != 0) return;
 
-    /* Load the ONNX model from disk */
-    _ort_check(g_ort->CreateSession(g_env, AI_ONNX_MODEL_PATH, g_opts, &g_session),
-               "CreateSession");
+    if (_ort_check(g_ort->CreateSession(g_env, AI_ONNX_MODEL_PATH, g_opts, &g_session),
+                    "CreateSession") != 0) return;
 
-    /* Zero-initialize persistent state */
+    /* Query actual tensor names from the loaded model — never hardcode these */
+    OrtAllocator *allocator = NULL;
+    if (_ort_check(g_ort->GetAllocatorWithDefaultOptions(&allocator),
+                    "GetAllocatorWithDefaultOptions") != 0) return;
+
+    char *raw_name = NULL;
+    if (_ort_check(g_ort->SessionGetInputName(g_session, 0, allocator, &raw_name),
+                    "SessionGetInputName") != 0) return;
+    strncpy(g_input_name, raw_name, sizeof(g_input_name) - 1);
+    allocator->Free(allocator, raw_name);
+    LOG_I(MAC, "[AI_SCHED] Input tensor name: \"%s\"\n", g_input_name);
+
+    raw_name = NULL;
+    if (_ort_check(g_ort->SessionGetOutputName(g_session, 0, allocator, &raw_name),
+                    "SessionGetOutputName") != 0) return;
+    strncpy(g_output_name, raw_name, sizeof(g_output_name) - 1);
+    allocator->Free(allocator, raw_name);
+    LOG_I(MAC, "[AI_SCHED] Output tensor name: \"%s\"\n", g_output_name);
+
     memset(g_ewma_tput,   0, sizeof(g_ewma_tput));
     memset(g_hol_delay_ms, 0, sizeof(g_hol_delay_ms));
 
     g_initialized = 1;
     LOG_I(MAC, "[AI_SCHED] Model loaded successfully. "
-               "State dim: %d, Max UEs: %d\n", AI_STATE_DIM, AI_N_UES_MAX);
+                "State dim: %d, Max UEs: %d\n", AI_STATE_DIM, AI_N_UES_MAX);
 }
 
 /* =========================================================================
@@ -240,8 +264,10 @@ static int run_inference(const float *state, float *q_out)
                    &input_tensor),
                "CreateTensorWithDataAsOrtValue");
 
-    const char *input_names[]  = {"input"};
-    const char *output_names[] = {"output"};
+    // const char *input_names[]  = {"input"};
+    // const char *output_names[] = {"output"};
+    const char *input_names[]  = {g_input_name};
+    const char *output_names[] = {g_output_name};
 
     _ort_check(g_ort->Run(g_session, NULL,
                            input_names,  (const OrtValue *const *)&input_tensor,  1,
@@ -377,10 +403,17 @@ void schedule_ue_spec_ai(module_id_t module_idP,
 {
     /* Safety net: if somehow called before init, fall back to default */
     if (!g_initialized) {
-        LOG_E(MAC, "[AI_SCHED] schedule_ue_spec_ai called before init! "
-                   "Falling back to schedule_dlsch.\n");
-        schedule_dlsch(module_idP, frameP, subframeP, mbsfn_flag);
-        return;
+        LOG_I(MAC, "[AI_SCHED] First TTI — running lazy init.\n");
+        init_ai_scheduler();
+        if (!g_initialized) {
+            /* init failed (model file missing, ONNX error, etc.)
+             * Fall back permanently — this message will repeat every TTI
+             * until the model file is present and the eNB is restarted. */
+            LOG_E(MAC, "[AI_SCHED] Init failed. Check model path: %s\n",
+                  AI_ONNX_MODEL_PATH);
+            schedule_dlsch(module_idP, frameP, subframeP, mbsfn_flag);
+            return;
+        }
     }
 
     eNB_MAC_INST *eNB = RC.mac[module_idP];

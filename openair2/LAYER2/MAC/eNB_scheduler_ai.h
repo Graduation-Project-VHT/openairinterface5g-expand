@@ -41,7 +41,7 @@
  * Both the .onnx and .onnx.data files must live in the same directory.
  * Override at compile time with -DAI_ONNX_MODEL_PATH='"..."' if needed. */
 #ifndef AI_ONNX_MODEL_PATH
-#define AI_ONNX_MODEL_PATH    "./AI_Model/dqn_20MHz_dinal.onnx"
+#define AI_ONNX_MODEL_PATH    "/openairinterface5g/openair2/LAYER2/MAC/AI_Model/dqn_20MHz_final.onnx"
 #endif
 
 /* =========================================================================
