@@ -978,7 +978,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   }
   else if (eNB->scheduler_mode == SCHED_MODE_AI) {
     schedule_ulsch_p   = schedule_ulsch;
-    schedule_ue_spec_p = scheduler_ue_spec_ai;
+    schedule_ue_spec_p = schedule_ue_spec_ai;
   }
 
   if(debug_flag == 0) {

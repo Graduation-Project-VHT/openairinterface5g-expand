@@ -41,8 +41,7 @@
 /* onnxruntime C API */
 #include <onnxruntime_c_api.h>
 
-#include "sched_ai.h"
-#include "eNB_scheduler_dlsch.h"
+#include "eNB_scheduler_ai.h"
 
 extern RAN_CONTEXT_t RC;
 
@@ -270,7 +269,7 @@ static int run_inference(const float *state, float *q_out)
  * n_active is typically ≤ 20, so O(n²) is fine here.
  * After sorting, slot_map[0] = UE_id with highest Q-value, etc.
  * ========================================================================= */
-static void sort_by_q_value(int *slot_map, const float *q_values, int n_active)
+static void sort_by_q_value(int *slot_map, float *q_values, int n_active)
 {
     for (int i = 1; i < n_active; i++) {
         int   key_id = slot_map[i];
@@ -283,7 +282,7 @@ static void sort_by_q_value(int *slot_map, const float *q_values, int n_active)
         }
         slot_map[j + 1] = key_id;
         /* q_values array is local to the caller, cast needed to assign */
-        ((float *)q_values)[j + 1] = key_q;
+        q_values[j + 1] = key_q;
     }
 }
 
@@ -334,8 +333,19 @@ static void update_ewma_and_hol(module_id_t module_idP)
         }
 
         /* Bytes delivered this TTI: read from eNB_UE_stats */
-        eNB_UE_STATS *ue_stats = &UE_info->eNB_UE_stats[0][UE_id];
-        float bytes_tx = (float)ue_stats->TBS[0]; /* last TBS in bytes */
+        // eNB_UE_STATS *ue_stats = &UE_info->eNB_UE_stats[0][UE_id];
+        // float bytes_tx = (float)ue_stats->TBS[0]; /* last TBS in bytes */
+
+        /* Estimate bytes delivered from CQI × allocated RBs.
+         * This matches the Python training CQI_BYTES_PER_RB table exactly. */
+        static const float cqi_bytes_per_rb[16] = {
+            0, 2, 4, 6, 10, 15, 21, 26, 34, 43, 49, 59, 70, 81, 92, 100
+        };
+        UE_sched_ctrl_t *ctrl = &UE_info->UE_sched_ctrl[UE_id];
+        uint8_t cqi = ctrl->dl_cqi[0];
+        if (cqi > 15) cqi = 15;
+        int nb_rb = (int)UE_info->UE_template[0][UE_id].nb_rb[0];
+        float bytes_tx = cqi_bytes_per_rb[cqi] * (float)nb_rb;
 
         /* Update EWMA: α=0.1 matches Python stub */
         float ratio = bytes_tx / MAX_BYTES_PER_TTI;
