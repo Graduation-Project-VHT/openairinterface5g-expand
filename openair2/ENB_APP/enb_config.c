@@ -189,19 +189,29 @@ void RCconfig_macrlc(void)
         AssertFatal(1==0,"MACRLC %d: %s unknown southbound midhaul\n",j,*(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_S_PREFERENCE_IDX].strptr));
       }
 
-      if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr), "default") == 0) {
+      char *sched_mode_str = *(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr);
+
+      if (strcmp(sched_mode_str, "default") == 0) {
         global_scheduler_mode=SCHED_MODE_DEFAULT;
-        LOG_I(ENB_APP,"sched mode = default %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
-      } else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr), "fairRR") == 0) {
+        LOG_I(ENB_APP,"sched mode = default %d [%s]\n",global_scheduler_mode,sched_mode_str);
+      } else if (strcmp(sched_mode_str, "fairRR") == 0) {
         global_scheduler_mode=SCHED_MODE_FAIR_RR;
-        printf("sched mode = fairRR %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
+        printf("sched mode = fairRR %d [%s]\n",global_scheduler_mode,sched_mode_str);
       }
-      else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr), "mlwdf") == 0) {
+      else if (strcmp(sched_mode_str, "mlwdf") == 0) {
         global_scheduler_mode = SCHED_MODE_MLWDF;
-        printf("sched mode = mlwdf %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
+        printf("sched mode = mlwdf %d [%s]\n",global_scheduler_mode,sched_mode_str);
+      }
+      else if (strcmp(sched_mode_str, "max_ci") == 0) {
+        global_scheduler_mode = SCHED_MODE_MAXCI;
+        printf("sched mode = max_ci %d [%s]\n", global_scheduler_mode, sched_mode_str);
+      }
+      else if (strcmp(sched_mode_str, "ai") == 0) {
+        global_scheduler_mode = SCHED_MODE_AI;
+        printf("sched mode = AI-based %d [%s]\n", global_scheduler_mode, sched_mode_str);
       } else {
         global_scheduler_mode=SCHED_MODE_DEFAULT;
-        printf("sched mode = default %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
+        printf("sched mode = default %d [%s]\n",global_scheduler_mode,sched_mode_str);
       }
 
       char *s = *MacRLC_ParamList.paramarray[j][MACRLC_DEFAULT_SCHED_DL_ALGO_IDX].strptr;
@@ -213,6 +223,14 @@ void RCconfig_macrlc(void)
       dl_pp->dl_algo = *(default_sched_dl_algo_t *) d;
       dl_pp->dl_algo.data = dl_pp->dl_algo.setup();
       LOG_I(ENB_APP, "using default scheduler DL algo '%s'\n", dl_pp->dl_algo.name);
+
+      if (global_scheduler_mode == SCHED_MODE_MAXCI) {
+          dl_pp->dl_algo.name = "max_ci_dl_algo";
+          dl_pp->dl_algo.run = max_ci_dl_run; // Tráo con trỏ hàm Downlink
+          //RC.mac[j]->pre_processor_ul.ul_algo.run = max_ci_ul_run; // Tráo con trỏ hàm Uplink
+          LOG_I(ENB_APP, "OVERRIDE: Successfully loaded MAX C/I Pre-processor!\n");
+      }
+      // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     }// j=0..num_inst
   } /*else {// MacRLC_ParamList.numelt > 0 // ignore it
 

@@ -49,7 +49,6 @@ extern int g_mlwdf_delay[];
 extern float g_mlwdf_thr[];
 extern float g_mlwdf_score[];
 extern float g_ue_qos_alpha[];
-extern int   g_ue_cqi_profile[];
 
 mac_rlc_am_muilist_t rlc_am_mui;
 
@@ -749,6 +748,9 @@ typedef struct {
           int found = -1;
           for (int _i = 0; _i < csv_buf_n; _i++)
               if (csv_buf[_i].rnti == rnti) { found = _i; break; }
+          // CQI profile calculation
+          const uint8_t _cqi = ue_sched_ctrl->dl_cqi[CC_id];
+          const int cqi_prof = (_cqi >= 12) ? 0 : (_cqi >= 7) ? 1 : 2;
           if (found < 0)
               csv_buf[csv_buf_n++] = (csv_entry_t){
                   (long)(frameP * 10 + subframeP),
@@ -756,7 +758,7 @@ typedef struct {
                   ue_template->oldmcs1[harq_pid], TBS,
                   /*sdu_len=*/0, ue_sched_ctrl->dl_cqi[0], /*retx=*/1,
                   g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
-                  g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
+                  g_ue_qos_alpha[UE_id], cqi_prof, harq_pid};
           else if (nb_rb > csv_buf[found].nb_rb) {
               csv_buf[found].nb_rb    = nb_rb;
               csv_buf[found].rb_util  = rb_util;
@@ -927,6 +929,10 @@ typedef struct {
             int found = -1;
             for (int _i = 0; _i < csv_buf_n; _i++)
                 if (csv_buf[_i].rnti == rnti) { found = _i; break; }
+            // CQI profile calculation
+            const uint8_t _cqi = ue_sched_ctrl->dl_cqi[CC_id];
+            const int cqi_prof = (_cqi >= 12) ? 0 : (_cqi >= 7) ? 1 : 2;
+
 
             if (found < 0)
                 csv_buf[csv_buf_n++] = (csv_entry_t){
@@ -935,7 +941,7 @@ typedef struct {
                     mcs, TBS,
                     sdu_length_total, ue_sched_ctrl->dl_cqi[0], /*retx=*/0,
                     g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
-                    g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
+                    g_ue_qos_alpha[UE_id], cqi_prof, harq_pid};
             else if (nb_rb > csv_buf[found].nb_rb) {
                 csv_buf[found].nb_rb    = nb_rb;
                 csv_buf[found].rb_util  = rb_util;
