@@ -1224,6 +1224,7 @@ set (MAC_SRC
   ${MAC_DIR}/scheduler_log.c
   ${MAC_DIR}/eNB_scheduler_dlsch.c
   ${MAC_DIR}/eNB_scheduler_mlwdf.c
+  ${MAC_DIR}/eNB_scheduler_ai.c
   ${MAC_DIR}/eNB_scheduler_ulsch.c
   ${MAC_DIR}/eNB_scheduler_mch.c
   ${MAC_DIR}/eNB_scheduler_bch.c
@@ -1326,6 +1327,7 @@ target_link_libraries(MAC_UE_NR PRIVATE asn1_lte_rrc_hdrs asn1_nr_rrc_hdrs PUBLI
 
 add_library(L2_LTE ${L2_LTE_SRC})
 target_link_libraries(L2_LTE PRIVATE asn1_lte_rrc_hdrs asn1_nr_rrc_hdrs)
+target_include_directories(L2_LTE PRIVATE ${OPENAIR_DIR}/third_party/onnxruntime/include) # ONNX runtime
 
 add_library(L2_NR
   ${L2_NR_SRC}
@@ -1750,6 +1752,7 @@ target_link_libraries(lte-softmodem PRIVATE
 target_link_libraries(lte-softmodem PRIVATE pthread m CONFIG_LIB rt)
 target_link_libraries(lte-softmodem PRIVATE ${T_LIB})
 target_link_libraries(lte-softmodem PRIVATE asn1_nr_rrc_hdrs asn1_lte_rrc_hdrs)
+target_link_libraries(lte-softmodem PRIVATE ${OPENAIR_DIR}/cmake_targets/ran_build/build/libonnxruntime.so)
 
 if(E2_AGENT)
   target_link_libraries(lte-softmodem PUBLIC e2_agent e2_agent_arg e2_ran_func_du_cucp_cuup)

@@ -485,7 +485,8 @@ typedef enum {
   SCHED_MODE_DEFAULT = 0, /// default cheduler
   SCHED_MODE_FAIR_RR,     /// fair raund robin
   SCHED_MODE_MLWDF,       /// QoS Aware M-LWDF scheduler
-  SCHED_MODE_MAXCI        /// MaxCI
+  SCHED_MODE_MAXCI,        /// MaxCI
+  SCHED_MODE_AI           /// AI-based schedueler
 } SCHEDULER_MODES;
 /*! \brief temp struct for DLSCH sched */
 typedef struct {

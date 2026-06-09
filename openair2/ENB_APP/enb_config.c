@@ -205,6 +205,10 @@ void RCconfig_macrlc(void)
       else if (strcmp(sched_mode_str, "max_ci") == 0) {
         global_scheduler_mode = SCHED_MODE_MAXCI;
         printf("sched mode = max_ci %d [%s]\n", global_scheduler_mode, sched_mode_str);
+      }
+      else if (strcmp(sched_mode_str, "ai") == 0) {
+        global_scheduler_mode = SCHED_MODE_AI;
+        printf("sched mode = AI-based %d [%s]\n", global_scheduler_mode, sched_mode_str);
       } else {
         global_scheduler_mode=SCHED_MODE_DEFAULT;
         printf("sched mode = default %d [%s]\n",global_scheduler_mode,sched_mode_str);
