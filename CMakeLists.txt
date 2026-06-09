@@ -1318,6 +1318,8 @@ add_library(L2
   )
 target_link_libraries(L2 PRIVATE x2ap s1ap lte_rrc m2ap)
 target_link_libraries(L2 PRIVATE asn1_lte_rrc_hdrs asn1_nr_rrc_hdrs)
+target_include_directories(L2 PRIVATE ${OPENAIR_DIR}/third_party/onnxruntime/include) # ONNX runtime
+
 if(E2_AGENT)
   target_compile_definitions(L2 PRIVATE ${E2AP_VERSION} ${KPM_VERSION} E2_AGENT)
 endif()
@@ -1327,7 +1329,6 @@ target_link_libraries(MAC_UE_NR PRIVATE asn1_lte_rrc_hdrs asn1_nr_rrc_hdrs PUBLI
 
 add_library(L2_LTE ${L2_LTE_SRC})
 target_link_libraries(L2_LTE PRIVATE asn1_lte_rrc_hdrs asn1_nr_rrc_hdrs)
-target_include_directories(L2_LTE PRIVATE ${OPENAIR_DIR}/third_party/onnxruntime/include) # ONNX runtime
 
 add_library(L2_NR
   ${L2_NR_SRC}
