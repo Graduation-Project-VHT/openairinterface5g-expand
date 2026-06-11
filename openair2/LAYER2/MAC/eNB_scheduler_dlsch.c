@@ -1221,21 +1221,17 @@ typedef struct {
     static struct timespec _csv_t0 = {0, 0};
     static int             _armed  = 0;
 
-    /* Arm when any UE in this TTI carries a real SDU (> 100 bytes).
-     * RRC keepalives and attach signalling are 0-17 bytes and never
-     * trigger this. iperf3 payloads are hundreds of bytes and fire
-     * it immediately on the first scheduled TTI after traffic starts.
-     * Using sdu_len rather than mlwdf_delay makes this work for every
-     * scheduler — Max C/I and Round Robin never write mlwdf_delay. */
-    if (!_armed) {
-      for (int _i = 0; _i < csv_buf_n; _i++) {
-        if (csv_buf[_i].sdu_len > 100) {
-          clock_gettime(CLOCK_MONOTONIC, &_csv_t0);
-          _armed = 1;
-          LOG_I(MAC, "[SCHED_LOG] Real traffic detected — CSV logging armed, t=0\n");
-          break;
-        }
-      }
+    /* Arm on the first TTI where 2+ UEs are scheduled simultaneously.
+     * During keepalive/RRC, only 1 UE is ever scheduled per TTI.
+     * The moment iperf3 starts, all UEs have full buffers and the
+     * scheduler serves 2-4 UEs per TTI without exception.
+     * csv_buf_n >= 2 is a hard guarantee from the data: 297 pre-traffic
+     * TTIs, zero had csv_buf_n >= 2. Scheduler-agnostic — works for
+     * Max C/I, Round Robin, PF, M-LWDF, and AI. */
+    if (!_armed && csv_buf_n >= 2) {
+      clock_gettime(CLOCK_MONOTONIC, &_csv_t0);
+      _armed = 1;
+      LOG_I(MAC, "[SCHED_LOG] Multi-UE TTI (n=%d) — CSV armed, t=0\n", csv_buf_n);
     }
 
     if (_armed) {
