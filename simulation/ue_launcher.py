@@ -162,6 +162,28 @@ Examples:
         help="Continue launching remaining UEs even if one fails to attach "
              "(by default, the script stops at the first failure)"
     )
+    parser.add_argument(
+        "--start-traffic", action="store_true",
+        help="Immediately start traffic_gen.py after all UEs attach"
+    )
+    parser.add_argument(
+        "--bandwidth", type=str, default=None,
+        help="iperf3 bandwidth passed to traffic_gen.py (e.g. '7M'). "
+             "Uses traffic_gen default when omitted."
+    )
+    parser.add_argument(
+        "--duration", type=int, default=None,
+        help="Test duration in seconds passed to traffic_gen.py. "
+             "Uses traffic_gen default when omitted."
+    )
+    parser.add_argument(
+        "--label", type=str, default="",
+        help="Run label passed to traffic_gen.py (e.g. 'ai_15ue_7m')"
+    )
+    parser.add_argument(
+        "--no-upload", action="store_true",
+        help="Skip CSV upload (passed through to traffic_gen.py)"
+    )
     args = parser.parse_args()
 
     if not (1 <= args.ues <= config.MAX_UES):
