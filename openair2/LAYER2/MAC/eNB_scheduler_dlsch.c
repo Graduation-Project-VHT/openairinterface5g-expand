@@ -541,14 +541,6 @@ typedef struct {
   int csv_buf_n = 0;
   memset(csv_buf, 0, sizeof(csv_buf));
 
-  /* Monotonic timestamp — replaces frameP*10+subframeP which wraps every 10.24s */
-    static struct timespec _csv_t0 = {0, 0};
-    if (_csv_t0.tv_sec == 0 && _csv_t0.tv_nsec == 0)
-        clock_gettime(CLOCK_MONOTONIC, &_csv_t0);
-    struct timespec _csv_now;
-    clock_gettime(CLOCK_MONOTONIC, &_csv_now);
-    long csv_timestamp_ms = (long)((_csv_now.tv_sec  - _csv_t0.tv_sec)  * 1000L
-                                 + (_csv_now.tv_nsec - _csv_t0.tv_nsec) / 1000000L);
 
   start_meas(&eNB->schedule_dlsch);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SCHEDULE_DLSCH, VCD_FUNCTION_IN);
@@ -764,7 +756,6 @@ typedef struct {
           const int cqi_prof = (_cqi >= 12) ? 0 : (_cqi >= 7) ? 1 : 2;
           if (found < 0)
               csv_buf[csv_buf_n++] = (csv_entry_t){
-                  csv_timestamp_ms,
                   frameP, subframeP, rnti, nb_rb, rb_util,
                   ue_template->oldmcs1[harq_pid], TBS,
                   /*sdu_len=*/0, ue_sched_ctrl->dl_cqi[0], /*retx=*/1,
@@ -947,7 +938,6 @@ typedef struct {
 
             if (found < 0)
                 csv_buf[csv_buf_n++] = (csv_entry_t){
-                    csv_timestamp_ms,
                     frameP, subframeP, rnti, nb_rb, rb_util,
                     mcs, TBS,
                     sdu_length_total, ue_sched_ctrl->dl_cqi[0], /*retx=*/0,
@@ -1227,12 +1217,23 @@ typedef struct {
       }
     }
   }
-  if (DL_scheduler_csv) {
+  if (DL_scheduler_csv && csv_buf_n > 0) {
+    /* Timer starts on the first TTI where a UE is actually scheduled.
+     * _csv_t0 is never set during idle TTIs (csv_buf_n == 0), so
+     * t=0 corresponds to the moment the first UE finishes attaching. */
+    static struct timespec _csv_t0 = {0, 0};
+    struct timespec _csv_now;
+    clock_gettime(CLOCK_MONOTONIC, &_csv_now);
+    if (_csv_t0.tv_sec == 0 && _csv_t0.tv_nsec == 0)
+      _csv_t0 = _csv_now;
+    long csv_timestamp_ms = (_csv_now.tv_sec  - _csv_t0.tv_sec)  * 1000L
+                          + (_csv_now.tv_nsec - _csv_t0.tv_nsec) / 1000000L;
+
     for (int _i = 0; _i < csv_buf_n; _i++) {
       csv_entry_t *e = &csv_buf[_i];
       fprintf(DL_scheduler_csv,
                       "%ld,%d,%d,%x,DL,%d,%.2f,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.4f,%d,%d\n",
-                      e->timestamp, e->frame, e->subframe, e->rnti,
+                      csv_timestamp_ms, e->frame, e->subframe, e->rnti,
                       e->nb_rb, e->rb_util, e->mcs, e->TBS,
                       e->sdu_len, e->cqi, e->retx,
                       e->mlwdf_delay, e->mlwdf_thr, e->mlwdf_score,
