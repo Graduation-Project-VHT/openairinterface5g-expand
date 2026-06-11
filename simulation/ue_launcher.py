@@ -226,8 +226,27 @@ Examples:
 
     if succeeded:
         n = len(succeeded)
-        print(f"""
-  All attached UEs are ready. Next step:
+        if args.start_traffic:
+            # Build the traffic_gen.py command, forwarding only the args
+            # that were explicitly given — omitted ones use traffic_gen's
+            # own defaults (config.DEFAULT_BANDWIDTH, config.DEFAULT_DURATION).
+            traffic_cmd = [sys.executable, "traffic_gen.py", "--ues", str(n)]
+            if args.bandwidth:
+                traffic_cmd += ["--bandwidth", args.bandwidth]
+            if args.duration is not None:
+                traffic_cmd += ["--duration", str(args.duration)]
+            if args.label:
+                traffic_cmd += ["--label", args.label]
+            if args.no_upload:
+                traffic_cmd += ["--no-upload"]
+
+            print(f"\n  All {n} UEs attached. Starting traffic immediately...")
+            print(f"  → {' '.join(traffic_cmd)}\n")
+            result = run_cmd(traffic_cmd, capture=False)
+            sys.exit(result.returncode)
+        else:
+            print(f"""
+    All attached UEs are ready. Next step:
     uv run traffic_gen.py --ues {n}
 """)
 
