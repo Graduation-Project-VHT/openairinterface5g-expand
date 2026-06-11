@@ -1218,28 +1218,44 @@ typedef struct {
     }
   }
   if (DL_scheduler_csv && csv_buf_n > 0) {
-    /* Timer starts on the first TTI where a UE is actually scheduled.
-     * _csv_t0 is never set during idle TTIs (csv_buf_n == 0), so
-     * t=0 corresponds to the moment the first UE finishes attaching. */
     static struct timespec _csv_t0 = {0, 0};
-    struct timespec _csv_now;
-    clock_gettime(CLOCK_MONOTONIC, &_csv_now);
-    if (_csv_t0.tv_sec == 0 && _csv_t0.tv_nsec == 0)
-      _csv_t0 = _csv_now;
-    long csv_timestamp_ms = (_csv_now.tv_sec  - _csv_t0.tv_sec)  * 1000L
-                          + (_csv_now.tv_nsec - _csv_t0.tv_nsec) / 1000000L;
+    static int             _armed  = 0;
 
-    for (int _i = 0; _i < csv_buf_n; _i++) {
-      csv_entry_t *e = &csv_buf[_i];
-      fprintf(DL_scheduler_csv,
-                      "%ld,%d,%d,%x,DL,%d,%.2f,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.4f,%d,%d\n",
-                      csv_timestamp_ms, e->frame, e->subframe, e->rnti,
-                      e->nb_rb, e->rb_util, e->mcs, e->TBS,
-                      e->sdu_len, e->cqi, e->retx,
-                      e->mlwdf_delay, e->mlwdf_thr, e->mlwdf_score,
-                      e->qos_alpha, e->cqi_profile, e->harq_pid);
+    /* Arm when any UE in this TTI carries a real SDU (> 100 bytes).
+     * RRC keepalives and attach signalling are 0-17 bytes and never
+     * trigger this. iperf3 payloads are hundreds of bytes and fire
+     * it immediately on the first scheduled TTI after traffic starts.
+     * Using sdu_len rather than mlwdf_delay makes this work for every
+     * scheduler — Max C/I and Round Robin never write mlwdf_delay. */
+    if (!_armed) {
+      for (int _i = 0; _i < csv_buf_n; _i++) {
+        if (csv_buf[_i].sdu_len > 100) {
+          clock_gettime(CLOCK_MONOTONIC, &_csv_t0);
+          _armed = 1;
+          LOG_I(MAC, "[SCHED_LOG] Real traffic detected — CSV logging armed, t=0\n");
+          break;
+        }
+      }
     }
-    fflush(DL_scheduler_csv);
+
+    if (_armed) {
+      struct timespec _csv_now;
+      clock_gettime(CLOCK_MONOTONIC, &_csv_now);
+      long csv_timestamp_ms = (_csv_now.tv_sec  - _csv_t0.tv_sec)  * 1000L
+                            + (_csv_now.tv_nsec - _csv_t0.tv_nsec) / 1000000L;
+
+      for (int _i = 0; _i < csv_buf_n; _i++) {
+        csv_entry_t *e = &csv_buf[_i];
+        fprintf(DL_scheduler_csv,
+                "%ld,%d,%d,%x,DL,%d,%.2f,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.4f,%d,%d\n",
+                csv_timestamp_ms, e->frame, e->subframe, e->rnti,
+                e->nb_rb, e->rb_util, e->mcs, e->TBS,
+                e->sdu_len, e->cqi, e->retx,
+                e->mlwdf_delay, e->mlwdf_thr, e->mlwdf_score,
+                e->qos_alpha, e->cqi_profile, e->harq_pid);
+      }
+      fflush(DL_scheduler_csv);
+    }
   }
 
   // UE_id loop
