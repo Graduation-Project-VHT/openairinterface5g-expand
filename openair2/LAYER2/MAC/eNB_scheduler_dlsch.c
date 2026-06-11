@@ -40,6 +40,8 @@
 #include "T.h"
 #include "openair2/LAYER2/MAC/mac_extern.h"
 
+#include <time.h>
+
 #define ENABLE_MAC_PAYLOAD_DEBUG
 // #define DEBUG_eNB_SCHEDULER 1
 
@@ -539,6 +541,15 @@ typedef struct {
   int csv_buf_n = 0;
   memset(csv_buf, 0, sizeof(csv_buf));
 
+  /* Monotonic timestamp — replaces frameP*10+subframeP which wraps every 10.24s */
+    static struct timespec _csv_t0 = {0, 0};
+    if (_csv_t0.tv_sec == 0 && _csv_t0.tv_nsec == 0)
+        clock_gettime(CLOCK_MONOTONIC, &_csv_t0);
+    struct timespec _csv_now;
+    clock_gettime(CLOCK_MONOTONIC, &_csv_now);
+    long csv_timestamp_ms = (long)((_csv_now.tv_sec  - _csv_t0.tv_sec)  * 1000L
+                                 + (_csv_now.tv_nsec - _csv_t0.tv_nsec) / 1000000L);
+
   start_meas(&eNB->schedule_dlsch);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SCHEDULE_DLSCH, VCD_FUNCTION_IN);
 
@@ -753,7 +764,7 @@ typedef struct {
           const int cqi_prof = (_cqi >= 12) ? 0 : (_cqi >= 7) ? 1 : 2;
           if (found < 0)
               csv_buf[csv_buf_n++] = (csv_entry_t){
-                  (long)(frameP * 10 + subframeP),
+                  csv_timestamp_ms,
                   frameP, subframeP, rnti, nb_rb, rb_util,
                   ue_template->oldmcs1[harq_pid], TBS,
                   /*sdu_len=*/0, ue_sched_ctrl->dl_cqi[0], /*retx=*/1,
@@ -936,7 +947,7 @@ typedef struct {
 
             if (found < 0)
                 csv_buf[csv_buf_n++] = (csv_entry_t){
-                    (long)(frameP * 10 + subframeP),
+                    csv_timestamp_ms,
                     frameP, subframeP, rnti, nb_rb, rb_util,
                     mcs, TBS,
                     sdu_length_total, ue_sched_ctrl->dl_cqi[0], /*retx=*/0,

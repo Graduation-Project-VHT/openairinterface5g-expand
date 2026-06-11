@@ -45,6 +45,12 @@
 
 extern RAN_CONTEXT_t RC;
 
+/* Shared logging globals — defined in eNB_scheduler_mlwdf.c, read by
+ * schedule_dlsch() to populate the hol_delay_ms and avg_thr_kbps CSV columns.
+ * Without explicit writes here, those columns are always 0. */
+extern int   g_mlwdf_delay[];
+extern float g_mlwdf_thr[];
+
 /* Module-level state — loaded once at startup, used every TTI
 The global onnxruntime API entry point */
 
@@ -480,6 +486,13 @@ void schedule_ue_spec_ai(module_id_t module_idP,
     /* Step 5: Reorder OAI UE linked list                                 */
     /* ------------------------------------------------------------------ */
     reorder_ue_list(module_idP, slot_map, n_active);
+
+    // Export the values to global logging
+    for (int _i = 0; _i < n_active; _i++) {
+        int _uid = slot_map[_i];
+        g_mlwdf_delay[_uid] = (int)g_hol_delay_ms[_uid];
+        g_mlwdf_thr[_uid]   = g_ewma_tput[_uid] * 9200.0f * 8.0f;
+    }
 
     /* ------------------------------------------------------------------ */
     /* Step 6: THE MODE TRICK                                              */
