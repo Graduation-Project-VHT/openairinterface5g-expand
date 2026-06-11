@@ -756,7 +756,7 @@ typedef struct {
           const int cqi_prof = (_cqi >= 12) ? 0 : (_cqi >= 7) ? 1 : 2;
           if (found < 0)
               csv_buf[csv_buf_n++] = (csv_entry_t){
-                  frameP, subframeP, rnti, nb_rb, rb_util,
+                  0, frameP, subframeP, rnti, nb_rb, rb_util,
                   ue_template->oldmcs1[harq_pid], TBS,
                   /*sdu_len=*/0, ue_sched_ctrl->dl_cqi[0], /*retx=*/1,
                   g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
@@ -938,7 +938,7 @@ typedef struct {
 
             if (found < 0)
                 csv_buf[csv_buf_n++] = (csv_entry_t){
-                    frameP, subframeP, rnti, nb_rb, rb_util,
+                    0, frameP, subframeP, rnti, nb_rb, rb_util,
                     mcs, TBS,
                     sdu_length_total, ue_sched_ctrl->dl_cqi[0], /*retx=*/0,
                     g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
