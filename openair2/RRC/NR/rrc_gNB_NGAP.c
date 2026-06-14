@@ -354,7 +354,9 @@ bool trigger_bearer_setup(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE, int n, pdusession
     return false;
   }
   AssertFatal(UE->as_security_active, "logic bug: security should be active when activating DRBs\n");
-  e1ap_bearer_setup_req_t bearer_req = {0};
+  e1ap_bearer_setup_req_t bearer_req = {
+    .gNB_cu_cp_ue_id = UE->rrc_ue_id,
+  };
 
   // Reject bearers setup if there's no CU-UP associated
   if (!is_cuup_associated(rrc)) {
@@ -411,6 +413,10 @@ bool trigger_bearer_setup(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE, int n, pdusession
       LOG_I(NR_RRC, "UE %d: added DRB %d for PDU session ID %d\n", UE->rrc_ue_id, rrc_drb->drb_id, rrc_drb->pdusession_id);
       pdu->DRBnGRanList[0] = fill_e1_drb_to_setup(rrc_drb, session, rrc->configuration.um_on_default_drb, UE->redcap_cap);
     }
+  }
+  if (bearer_req.numPDUSessions == 0) {
+    LOG_W(NR_RRC, "UE %d: No PDU sessions to setup, skipping bearer context setup\n", UE->rrc_ue_id);
+    return false;
   }
   /* Limitation: we assume one fixed CU-UP per UE. We base the selection on
    * NSSAI, but the UE might have multiple PDU sessions with differing slices,

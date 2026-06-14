@@ -13,7 +13,7 @@
 #include "xran_fh_o_du.h"
 #include "openair1/PHY/impl_defs_nr.h"
 #include "openair1/PHY/TOOLS/tools_defs.h"
-#include "openair1/PHY/defs_common.h"
+#include "openair1/PHY/defs_nr_common.h"
 /*
  * Structure added to bear the information needed from OAI RU
  */

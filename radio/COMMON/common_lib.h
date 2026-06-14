@@ -11,10 +11,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include "common/cmake_defs.h"
-#include <openair1/PHY/TOOLS/tools_defs.h>
+#include <stdbool.h>
 #include "record_player.h"
-#include "common/utils/threadPool/notified_fifo.h"
 
 /* default name of shared library implementing the radio front end */
 #define OAI_RF_LIBNAME        "oai_device"
@@ -139,14 +137,6 @@ typedef enum {
   /* first 12 bits reserved for beams */
   TX_GPIO_CHANGE = 0x1000,
 } radio_tx_gpio_flag_t;
-
-/*! \brief Structure used for initializing UDP read threads */
-typedef struct {
-  openair0_device_t *device;
-  int thread_id;
-  pthread_t pthread;
-  notifiedFIFO_t *resp;
-} udp_ctx_t;
 
 typedef enum {
   RU_GPIO_CONTROL_NONE,
@@ -351,7 +341,7 @@ typedef struct {
   struct {
     bool active;
     openair0_timestamp_t timestamp;
-    void *txp[NB_ANTENNAS_TX];
+    void **txp;
     int nsamps;
     int nbAnt;
     int flags;
@@ -392,9 +382,6 @@ struct openair0_device {
 
   /*!brief pointer to FH state, used in ECPRI split 8*/
   fhstate_t fhstate;
-
-  /*!brief UDP TX thread context*/
-  udp_ctx_t **utx;
 
   /*!brief Used in ECPRI split 8 to indicate numerator of sampling rate ratio*/
   int sampling_rate_ratio_n;
@@ -631,7 +618,6 @@ struct openair0_device {
   void *(*get_internal_parameter)(char *id);
   /* \brief timing statistics for TX fronthaul (ethernet)
    */
-  time_stats_t tx_fhaul;
   re_order_t reOrder;
 };
 
@@ -689,10 +675,6 @@ extern void iqrecorder_end(openair0_device_t *device);
 
 int openair0_write_reorder(openair0_device_t *device, openair0_timestamp_t timestamp, void **txp, int nsamps, int nbAnt, int flags);
 void openair0_write_reorder_clear_context(openair0_device_t *device);
-#include <unistd.h>
-#ifndef gettid
-#define gettid() syscall(__NR_gettid)
-#endif
 /**@}*/
 
 #ifdef __cplusplus

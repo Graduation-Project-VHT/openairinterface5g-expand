@@ -3,11 +3,12 @@
  */
 
 #include <stdint.h>
-#include <openair1/PHY/impl_defs_top.h>
+#include "openair1/PHY/defs_common.h"
 #include <radio/COMMON/common_lib.h>
 #include <executables/softmodem-common.h>
 #include <openair1/PHY/TOOLS/calibration_scope.h>
 #include "nfapi/oai_integration/vendor_ext.h"
+#include "common/config/config_userapi.h"
 
 
 int oai_exit=false;

@@ -6,7 +6,6 @@
  * \brief gNB measurement routines
  */
 
-#include "PHY/types.h"
 #include "PHY/defs_gNB.h"
 #include "nr_ul_estimation.h"
 

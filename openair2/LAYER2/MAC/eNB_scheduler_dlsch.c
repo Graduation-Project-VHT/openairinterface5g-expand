@@ -418,6 +418,13 @@ void schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframe
 {
   if (is_pmch_subframe(frameP, subframeP, &RC.eNB[module_idP][0]->frame_parms))
     return;
+  // Print nb_mac_CC exactly once, not every TTI
+  static int nb_cc_printed = 0;
+  if (!nb_cc_printed) {
+    LOG_I(MAC, "[SCHED_DIAG] module_id=%d nb_mac_CC=%d\n",
+          module_idP, RC.nb_mac_CC[module_idP]);
+    nb_cc_printed = 1;
+  }
 
   for (int CC_id = 0; CC_id < RC.nb_mac_CC[module_idP]; CC_id++) {
     // for TDD: check that we have to act here, otherwise skip
@@ -515,6 +522,25 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
   const int N_RBG = to_rbg(eNB->common_channels[CC_id].mib->message.dl_Bandwidth);
   int total_nb_available_rb = N_RB_DL;
   nfapi_dl_config_request_body_t *dl_req = &eNB->DL_req[CC_id].dl_config_request_body;
+
+// Buffer struct
+typedef struct {
+    long   timestamp;
+    int    frame, subframe;
+    rnti_t rnti;
+    int    nb_rb;
+    float  rb_util;
+    int    mcs, TBS, sdu_len, cqi, retx;
+    int    mlwdf_delay;
+    float  mlwdf_thr;
+    float  mlwdf_score;
+    float  qos_alpha;
+    int    cqi_profile;
+    int    harq_pid;
+} csv_entry_t;
+  csv_entry_t csv_buf[MAX_MOBILES_PER_ENB];
+  int csv_buf_n = 0;
+  memset(csv_buf, 0, sizeof(csv_buf));
 
   start_meas(&eNB->schedule_dlsch);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SCHEDULE_DLSCH, VCD_FUNCTION_IN);
@@ -720,25 +746,45 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
       eNB_UE_stats->TBS = TBS;
 
       // DL Scheduler logging after mcs
-      if (DL_scheduler_csv && nb_rb > 0) {
-        // RB ultilization
-        const float rb_util = (float)nb_rb / N_RB_DL * 100;
-        fprintf(DL_scheduler_csv,
-                "%ld,%d,%d,%x,DL,%d,%0.2f,%d,%d,%d,%d,%d,%d\n",
-                (long)(frameP * 10 + subframeP),
-                frameP,
-                subframeP,
-                rnti,
-                nb_rb,
-                rb_util,
-                ue_template->oldmcs1[harq_pid],
-                TBS,
-                0, // Retransmission don't fetch new MAC SDU
-                ue_sched_ctrl->dl_cqi[0],
-                1,
-                harq_pid);
-        fflush(DL_scheduler_csv);
+      if (nb_rb > 0) {
+          const float rb_util = (float)nb_rb / N_RB_DL * 100;
+          int found = -1;
+          for (int _i = 0; _i < csv_buf_n; _i++)
+              if (csv_buf[_i].rnti == rnti) { found = _i; break; }
+          if (found < 0)
+              csv_buf[csv_buf_n++] = (csv_entry_t){
+                  (long)(frameP * 10 + subframeP),
+                  frameP, subframeP, rnti, nb_rb, rb_util,
+                  ue_template->oldmcs1[harq_pid], TBS,
+                  /*sdu_len=*/0, ue_sched_ctrl->dl_cqi[0], /*retx=*/1,
+                  g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
+                  g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
+          else if (nb_rb > csv_buf[found].nb_rb) {
+              csv_buf[found].nb_rb    = nb_rb;
+              csv_buf[found].rb_util  = rb_util;
+              csv_buf[found].retx     = 1;
+              csv_buf[found].harq_pid = harq_pid;
+          }
       }
+      // if (DL_scheduler_csv && nb_rb > 0) {
+      //   // RB ultilization
+      //   const float rb_util = (float)nb_rb / N_RB_DL * 100;
+      //   fprintf(DL_scheduler_csv,
+      //           "%ld,%d,%d,%x,DL,%d,%0.2f,%d,%d,%d,%d,%d,%d\n",
+      //           (long)(frameP * 10 + subframeP),
+      //           frameP,
+      //           subframeP,
+      //           rnti,
+      //           nb_rb,
+      //           rb_util,
+      //           ue_template->oldmcs1[harq_pid],
+      //           TBS,
+      //           0, // Retransmission don't fetch new MAC SDU
+      //           ue_sched_ctrl->dl_cqi[0],
+      //           1,
+      //           harq_pid);
+      //   fflush(DL_scheduler_csv);
+      // }
 
     } else {
       // Now check RLC information to compute number of required RBs
@@ -878,28 +924,48 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
         }
 
         // DL Scheduler logging after mcs
-        if (DL_scheduler_csv && nb_rb > 0) {
-          // RB ultilization
-          const float rb_util = (float)nb_rb / N_RB_DL * 100;
-          fprintf(DL_scheduler_csv,
-                  "%ld,%d,%d,%x,DL,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.1f,%d\n",
-                  (long)(frameP * 10 + subframeP),
-                  frameP,
-                  subframeP,
-                  rnti,
-                  nb_rb,
-                  rb_util,
-                  mcs,
-                  TBS,
-                  ue_sched_ctrl->dl_cqi[0], // Đây là CQI thực tế đang dao động (từ 3 đến 15)
-                  0,
-                  g_mlwdf_delay[UE_id],
-                  g_mlwdf_thr[UE_id],
-                  g_mlwdf_score[UE_id],
-                  g_ue_qos_alpha[UE_id],    // [CỘT MỚI 1] Lấy trọng số dịch vụ
-                  g_ue_cqi_profile[UE_id]); // [CỘT MỚI 2] Lấy profile sóng (0: Tốt, 1: Khá, 2: Kém)
-          fflush(DL_scheduler_csv);
+        if (nb_rb > 0) {
+            const float rb_util = (float)nb_rb / N_RB_DL * 100;
+            int found = -1;
+            for (int _i = 0; _i < csv_buf_n; _i++)
+                if (csv_buf[_i].rnti == rnti) { found = _i; break; }
+
+            if (found < 0)
+                csv_buf[csv_buf_n++] = (csv_entry_t){
+                    (long)(frameP * 10 + subframeP),
+                    frameP, subframeP, rnti, nb_rb, rb_util,
+                    mcs, TBS,
+                    sdu_length_total, ue_sched_ctrl->dl_cqi[0], /*retx=*/0,
+                    g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
+                    g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
+            else if (nb_rb > csv_buf[found].nb_rb) {
+                csv_buf[found].nb_rb    = nb_rb;
+                csv_buf[found].rb_util  = rb_util;
+                csv_buf[found].mcs      = mcs;
+                csv_buf[found].TBS      = TBS;
+                csv_buf[found].sdu_len  = sdu_length_total;
+                csv_buf[found].harq_pid = harq_pid;
+            }
         }
+        // if (DL_scheduler_csv && nb_rb > 0) {
+        //   // RB ultilization
+        //   const float rb_util = (float)nb_rb / N_RB_DL * 100;
+        //   fprintf(DL_scheduler_csv,
+        //           "%ld,%d,%d,%x,DL,%d,%0.2f,%d,%d,%d,%d,%d,%d\n",
+        //           (long)(frameP * 10 + subframeP),
+        //           frameP,
+        //           subframeP,
+        //           rnti,
+        //           nb_rb,
+        //           rb_util,
+        //           mcs,
+        //           TBS,
+        //           sdu_length_total,
+        //           ue_sched_ctrl->dl_cqi[0],
+        //           0,
+        //           harq_pid);
+        //   fflush(DL_scheduler_csv);
+        // }
 
         LOG_D(MAC,
               "dlsch_mcs before and after the rate matching = (%d, %d), TBS %d, nb_rb %d\n",
@@ -1145,7 +1211,22 @@ void schedule_ue_spec(module_id_t module_idP, int CC_id, frame_t frameP, sub_fra
         program_dlsch_acknak(module_idP, CC_id, UE_id, frameP, subframeP, dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.cce_idx);
       }
     }
-  } // UE_id loop
+  }
+  if (DL_scheduler_csv) {
+    for (int _i = 0; _i < csv_buf_n; _i++) {
+      csv_entry_t *e = &csv_buf[_i];
+      fprintf(DL_scheduler_csv,
+                      "%ld,%d,%d,%x,DL,%d,%.2f,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.4f,%d,%d\n",
+                      e->timestamp, e->frame, e->subframe, e->rnti,
+                      e->nb_rb, e->rb_util, e->mcs, e->TBS,
+                      e->sdu_len, e->cqi, e->retx,
+                      e->mlwdf_delay, e->mlwdf_thr, e->mlwdf_score,
+                      e->qos_alpha, e->cqi_profile, e->harq_pid);
+    }
+    fflush(DL_scheduler_csv);
+  }
+
+  // UE_id loop
   stop_meas(&eNB->schedule_dlsch);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SCHEDULE_DLSCH, VCD_FUNCTION_OUT);
 }

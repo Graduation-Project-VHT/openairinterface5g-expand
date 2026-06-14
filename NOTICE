@@ -1,10 +1,10 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-The source code is distributed under [**Collaborative Standards Software
-License (CSSL) v1.0**](LICENSE).  Some files, such as for orchestration,
-are distributed under [MIT license](preferred)(MIT.txt). Documentation is
-distributed under [Creative Commons Attribution 4.0 International
-license](LICENSES/preferred/CC-BY-4.0.txt).
+The source code is distributed under Collaborative Standards Software License
+(CSSL) v1.0. Some files, such as for orchestration, are distributed under MIT
+license. Documentation is distributed under Creative Commons Attribution 4.0
+International license. All the files without an explicit copyright header have
+an implicit "Copyright of OpenAirInterface Authors".
 
 For more details of the license, refer to the `LICENSES` directory for a list
 of preferred and exceptionally-applied licenses.

@@ -8,10 +8,7 @@
 #include <stdint.h>
 
 #ifdef __NVCC__
-typedef struct complex16 {
-  int16_t r;
-  int16_t i;
-} c16_t;
+#include "common/platform_types.h"
 #else
 #include "PHY/TOOLS/tools_defs.h"
 #endif

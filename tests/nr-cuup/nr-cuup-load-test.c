@@ -12,6 +12,7 @@
 #include "openair2/E1AP/e1ap.h"
 #include "openair3/ocp-gtpu/gtp_itf.h"
 #include "openair2/E1AP/lib/e1ap_interface_management.h"
+#include "common/config/config_userapi.h"
 
 configmodule_interface_t *uniqCfg;
 

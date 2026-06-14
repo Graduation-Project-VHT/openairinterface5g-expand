@@ -42,18 +42,38 @@ add_dependencies(tests test_sse_intrinsics)
 add_test(NAME test_sse_intrinsics
   COMMAND ./test_sse_intrinsics)
 
+add_executable(benchmark_channel_pipeline benchmark_channel_pipeline.cpp test_channel_pipeline_tools.c)
+target_link_libraries(benchmark_channel_pipeline PRIVATE UTIL SIMU PHY_COMMON LOG CONFIG_LIB shlib_loader m channel_pipeline benchmark::benchmark thread-pool)
+
+add_executable(test_channel_pipeline test_channel_pipeline.cpp test_channel_pipeline_tools.c)
+target_link_libraries(test_channel_pipeline PRIVATE UTIL SIMU PHY_COMMON LOG CONFIG_LIB shlib_loader m channel_pipeline GTest::gtest thread-pool)
+
+if (CUDA_ENABLE)
+  target_compile_definitions(test_channel_pipeline PRIVATE CUDA_ENABLE)
+  add_dependencies(tests test_channel_pipeline)
+  add_test(NAME test_channel_pipeline COMMAND test_channel_pipeline)
+  set_tests_properties(test_channel_pipeline PROPERTIES LABELS "cuda")
+
+  target_compile_definitions(benchmark_channel_pipeline PRIVATE CUDA_ENABLE)
+  add_dependencies(tests benchmark_channel_pipeline)
+  add_test(NAME benchmark_channel_pipeline COMMAND benchmark_channel_pipeline)
+  set_tests_properties(benchmark_channel_pipeline PROPERTIES LABELS "cuda")
+endif()
+
 if(CUDA_ENABLE)
 add_executable(test_multipath test_multipath.c)
 target_link_libraries(test_multipath PRIVATE UTIL SIMU LOG CONFIG_LIB shlib_loader m oai_cuda_lib)
 
 add_dependencies(tests test_multipath)
 add_test(NAME test_multipath COMMAND test_multipath)
+set_tests_properties(test_multipath PROPERTIES LABELS "cuda")
 
 add_executable(test_noise test_noise.c)
 target_link_libraries(test_noise PRIVATE UTIL SIMU PHY_COMMON LOG CONFIG_LIB shlib_loader m oai_cuda_lib)
 
 add_dependencies(tests test_noise)
 add_test(NAME test_noise COMMAND test_noise)
+set_tests_properties(test_noise PROPERTIES LABELS "cuda")
 
 add_executable(test_channel_simulation test_channel_simulation.c)
 target_link_libraries(test_channel_simulation PRIVATE UTIL SIMU PHY_COMMON LOG CONFIG_LIB shlib_loader m oai_cuda_lib)

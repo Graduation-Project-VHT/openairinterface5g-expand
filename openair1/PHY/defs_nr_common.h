@@ -12,7 +12,7 @@
 #include "PHY/impl_defs_top.h"
 #include "impl_defs_nr.h"
 #include "PHY/CODING/nrPolar_tools/nr_polar_defs.h"
-
+#include "radio/COMMON/common_lib.h"
 #include <pthread.h>
 
 #define MAX_NUM_SUBCARRIER_SPACING 5
@@ -41,15 +41,11 @@
 
 #define NR_MAX_PDCCH_AGG_LEVEL 16 // 3GPP TS 38.211 V15.8 Section 7.3.2 Table 7.3.2.1-1: Supported PDCCH aggregation levels
 
-#define MAX_NUM_NR_DLSCH_SEGMENTS_PER_LAYER 36
-
-#define MAX_NUM_NR_ULSCH_SEGMENTS_PER_LAYER 34
-
 #define MAX_NUM_NR_RE (4*14*273*12)
 
 #define MAX_NUM_NR_SRS_SYMBOLS 4
 #define MAX_NUM_NR_SRS_AP 4
-
+#define NUMBER_OF_NR_RU_PRACH_OCCASIONS_MAX 12
 
 #define MAX_DELAY_COMP 20
 
@@ -101,34 +97,6 @@ typedef struct {
   int n_srs_ports;
   int resource_type;
 } nr_srs_info_t;
-
-#define NUMBER_OF_NR_PRACH_MAX 8
-typedef struct {
-  int frame;
-  int slot;
-  int num_slots; // prach duration in slots
-  int beams[NFAPI_MAX_NUM_BG_IF];
-  nfapi_nr_prach_pdu_t pdu;
-  int rootSequenceIndex;
-  int numrootSequenceIndex;
-  int msg1_frequencystart;
-  int mu;
-  int prach_sequence_length;
-  int restricted_set;
-  int numerology_index;
-  int nb_rx;
-  c16_t (*Xu)[839];
-  time_stats_t *rx_prach;
-  c16_t (*prach_buf)[NUMBER_OF_NR_RU_PRACH_OCCASIONS_MAX][NR_PRACH_SEQ_LEN_L];
-} prach_item_t;
-
-typedef struct {
-  /// prach commands
-  prach_item_t *list[NUMBER_OF_NR_PRACH_MAX];
-  /// mutex for prach_list access
-  pthread_mutex_t prach_list_mutex;
-} prach_list_t;
-void init_prach_list(prach_list_t *);
 
 typedef struct NR_DL_FRAME_PARMS_s {
   /// frequency range

@@ -9,8 +9,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "common/config/config_paramdesc.h"
-#include "common/config/config_userapi.h"
 
 #ifdef __cplusplus
 extern "C"

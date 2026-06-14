@@ -16,10 +16,10 @@ void scheduler_log_init(void)
     return;
   }
 
-  const char *header = "timestamp_ms,frame,subframe,rnti,direction,nb_rb,mcs,tbs_bytes,cqi,retx,hol_delay_ms,avg_thr_kbps,mlwdf_score,qos_alpha,cqi_profile";
-
-  fprintf(DL_scheduler_csv, "%s\n", header);
-  fprintf(UL_scheduler_csv, "%s\n", header);
+  const char *header = "timestamp_ms,frame,subframe,rnti,direction,nb_rb,rb_util,mcs,tbs_bytes,sdu_bytes,cqi,retx,hol_delay_ms,avg_thr_kbps,mlwdf_score,qos_alpha,cqi_profile,harq_pid\n";
+  // Write the CSV header
+  fprintf(DL_scheduler_csv, "%s", header);
+  fprintf(UL_scheduler_csv, "%s", header);
 
   fflush(DL_scheduler_csv);
   fflush(UL_scheduler_csv);

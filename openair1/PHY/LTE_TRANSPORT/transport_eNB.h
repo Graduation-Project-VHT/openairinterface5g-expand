@@ -12,6 +12,7 @@
 #include "dci.h"
 #include "mdci.h"
 #include "uci_common.h"
+#include "common/cmake_defs.h"
 //#ifndef STANDALONE_COMPILE
 //  #include "UTIL/LISTS/list.h"
 //#endif

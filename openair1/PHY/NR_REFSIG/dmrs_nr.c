@@ -15,6 +15,7 @@
 
 #include "PHY/NR_REFSIG/ss_pbch_nr.h"
 #include "PHY/NR_REFSIG/dmrs_nr.h"
+#include "log.h"
 #include "nfapi/open-nFAPI/nfapi/public_inc/nfapi_nr_interface.h"
 
 uint8_t allowed_xlsch_re_in_dmrs_symbol(uint16_t k,
@@ -152,88 +153,6 @@ void pseudo_random_sequence_optimised(unsigned int size, uint32_t *c, uint32_t c
     x2 = x2 ^ (x2<<31) ^ (x2<<30) ^ (x2<<29) ^ (x2<<28);
     c[n] = x1^x2;
   }
-}
-
-/*******************************************************************
-*
-* NAME :         lte_gold_new
-*
-* PARAMETERS :
-*
-* RETURN :       generate pseudo-random sequence which is a length-31 Gold sequence
-*
-* DESCRIPTION :  This function is the same as "lte_gold" function in file lte_gold.c
-*                It allows checking that optimization works fine.
-*                generated sequence is given in an array as a bit map.
-*
-*********************************************************************/
-
-#define CELL_DMRS_LENGTH   (224*2)
-#define CHECK_GOLD_SEQUENCE
-
-void lte_gold_new(LTE_DL_FRAME_PARMS *frame_parms, uint32_t lte_gold_table[20][2][14], uint16_t Nid_cell)
-{
-  unsigned char ns,l,Ncp=1-frame_parms->Ncp;
-  uint32_t cinit;
-
-#ifdef CHECK_GOLD_SEQUENCE
-
-  uint32_t dmrs_bitmap[20][2][14];
-  uint32_t *dmrs_sequence =  calloc(CELL_DMRS_LENGTH, sizeof(uint32_t));
-  if (dmrs_sequence == NULL) {
-    msg("Fatal error: memory allocation problem \n");
-  	assert(0);
-  }
-  else
-  {
-    printf("Check of demodulation reference signal of pbch sequence \n");
-  }
-
-#endif
-
-  /* for each slot number */
-  for (ns=0; ns<20; ns++) {
-
-  /* for each ofdm position */
-    for (l=0; l<2; l++) {
-
-      cinit = Ncp +
-             (Nid_cell<<1) +
-             (((1+(Nid_cell<<1))*(1 + (((frame_parms->Ncp==0)?4:3)*l) + (7*(1+ns))))<<10);
-
-      pseudo_random_sequence_optimised(14, &(lte_gold_table[ns][l][0]), cinit);
-
-#ifdef CHECK_GOLD_SEQUENCE
-
-      pseudo_random_sequence(CELL_DMRS_LENGTH, dmrs_sequence, cinit);
-
-      int j = 0;
-      int k = 0;
-
-      /* format for getting bitmap from uint32_t */
-      for (int i=0; i<14; i++) {
-        dmrs_bitmap[ns][l][i] = 0;
-        for (; j < k + 32; j++) {
-          dmrs_bitmap[ns][l][i] |= (dmrs_sequence[j]<<j);
-        }
-        k = j;
-      }
-
-      for (int i=0; i<14; i++) {
-        if (lte_gold_table[ns][l][i] != dmrs_bitmap[ns][l][i]) {
-          printf("Error in gold sequence computation for ns %d l %d and index %i : 0x%x 0x%x \n", ns, l, i, lte_gold_table[ns][l][i], dmrs_bitmap[ns][l][i]);
-          assert(0);
-        }
-      }
-
-#endif
-
-    }
-  }
-
-#ifdef CHECK_GOLD_SEQUENCE
-  free(dmrs_sequence);
-#endif
 }
 
 /*******************************************************************

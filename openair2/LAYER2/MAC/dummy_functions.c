@@ -8,7 +8,6 @@
 //      to be removed once separation between NR and LTE is achieved
 
 int sf_ahead = 4;
-SCHEDULER_MODES global_scheduler_mode;
 
 int rrc_mac_config_req_eNB(const module_id_t Mod_idP, const rrc_mac_config_req_eNB_t *param)
 {

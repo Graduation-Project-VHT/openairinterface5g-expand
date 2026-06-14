@@ -18,6 +18,7 @@
 
 static f1ap_net_config_t read_DU_IP_config(const eth_params_t* f1_params, const char *f1u_ip_addr)
 {
+  AssertFatal(f1_params->my_portc == 0 && f1_params->remote_portc == 0, "portc not supported, must be 0\n");
   f1ap_net_config_t nc = {0};
 
   nc.CU_f1_ip_address= strdup(f1_params->remote_addr);

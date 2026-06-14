@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
 #include "oai_cuda.h"
+#include "common/platform_types.h"
 
 #define CHECK_CUDA(val) checkCuda((val), #val, __FILE__, __LINE__)
 static void checkCuda(cudaError_t result, const char *const func, const char *const file, const int line)

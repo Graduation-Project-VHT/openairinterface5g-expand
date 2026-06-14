@@ -26,6 +26,7 @@
 #include "LTE_PMCH-InfoList-r9.h"
 
 #include "openair3/SECU/secu_defs.h"
+#include "common/utils/threadPool/notified_fifo.h"
 
 #define MAX_NUMBER_NETIF                 1 //16
 #define ENB_NAS_USE_TUN_W_MBMS_BIT      (1<< 10)

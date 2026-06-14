@@ -7,6 +7,7 @@
 #define __NRLDPC_DEFS__H__
 #include <openair1/PHY/defs_nr_common.h>
 #include "openair1/PHY/CODING/nrLDPC_decoder/nrLDPC_types.h"
+#include "common/utils/threadPool/task_ans.h"
 
 /**
    \brief LDPC encoder parameter structure

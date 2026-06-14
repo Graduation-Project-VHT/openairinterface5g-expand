@@ -5,7 +5,6 @@
 #include "PHY/defs_nr_common.h"
 #define _GNU_SOURCE // For pthread_setname_np
 #include <pthread.h>
-#include <openair1/PHY/impl_defs_top.h>
 #include "executables/nr-ue-ru.h"
 #include "executables/nr-uesoftmodem.h"
 #include "PHY/INIT/nr_phy_init.h"

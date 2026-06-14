@@ -1,8 +1,9 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-STATUS 2020/10/15 : added External Resources section and links  
+# How to run an NSA setup with eNB/gNB
 
-**Table of Contents**
+This page details how to run an non-standalone (NSA) setup, using an eNB and
+gNB (both OAI). It might be outdated, but still contains valuable information.
 
 [[_TOC_]]
 
@@ -227,6 +228,7 @@ Execute:
 
 ```
 
+You should see the X2 messages in Wireshark and at the eNB.
 
 ## Test Case
 

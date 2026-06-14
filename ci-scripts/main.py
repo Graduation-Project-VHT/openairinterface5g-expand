@@ -70,6 +70,9 @@ def ExecuteActionWithParam(action, ctx, node):
 		RAN.Build_eNB_args=test.findtext('Build_eNB_args')
 		CONTAINERS.imageKind=test.findtext('kind')
 		proxy_commit = test.findtext('proxy_commit')
+		dockerfile = test.findtext('dockerfile') or ''
+		runtime_opt = test.findtext('runtime-opt') or ''
+		ctest_opt = test.findtext('ctest-opt') or ''
 		if proxy_commit is not None:
 			CONTAINERS.proxyCommit = proxy_commit
 		if action == 'Build_eNB':
@@ -81,7 +84,7 @@ def ExecuteActionWithParam(action, ctx, node):
 		elif action == 'Build_Cluster_Image':
 			success = CLUSTER.BuildClusterImage(ctx, node, HTML)
 		elif action == 'Build_Run_Tests':
-			success = CONTAINERS.BuildRunTests(ctx, node, HTML)
+			success = CONTAINERS.BuildRunTests(ctx, node, dockerfile, runtime_opt, ctest_opt, HTML)
 
 	elif action == 'Initialize_eNB':
 		RAN.Initialize_eNB_args=test.findtext('Initialize_eNB_args')

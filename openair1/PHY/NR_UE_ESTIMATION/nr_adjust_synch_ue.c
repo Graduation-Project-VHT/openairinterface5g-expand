@@ -2,11 +2,8 @@
  * SPDX-License-Identifier: LicenseRef-CSSL-1.0
  */
 
-#include "PHY/types.h"
 #include "PHY/defs_nr_UE.h"
 #include "PHY/NR_UE_ESTIMATION/nr_estimation.h"
-#include "PHY/impl_defs_top.h"
-
 #include "executables/nr-uesoftmodem.h"
 
 //#define DEBUG_PHY
