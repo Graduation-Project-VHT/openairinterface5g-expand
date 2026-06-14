@@ -37,3 +37,7 @@ CMakeUserPresets.json
 # Python config
 *.pyc
 __pycache__/
+
+# Log results
+logs/*
+simulation/evaluation/DL_scheduler_log.csv

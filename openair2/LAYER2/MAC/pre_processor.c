@@ -867,7 +867,9 @@ int rr_ul_run(module_id_t Mod_id,
   AssertFatal(num_contig_rb <= 2, "cannot handle more than two contiguous RB regions\n");
   UE_info_t *UE_info = &RC.mac[Mod_id]->UE_info;
   const int max_rb = num_contig_rb > 1 ? MAX(rbs[0].length, rbs[1].length) : rbs[0].length;
+
   eNB_MAC_INST *mac = RC.mac[Mod_id];
+  const int N_RB_UL = to_prb(mac->common_channels[CC_id].ul_Bandwidth);
   /* for every UE: check whether we have to handle a retransmission (and
    * allocate, if so). If not, compute how much RBs this UE would need */
   int rb_idx_required[MAX_MOBILES_PER_ENB];
@@ -1080,9 +1082,22 @@ int rr_ul_run(module_id_t Mod_id,
       UE_TEMPLATE *UE_template = &UE_info->UE_template[CC_id][UE_id];
 
       /* MCS has been allocated previously */
-      UE_template->pre_first_nb_rb_ul = rbs[r].start;
+      // UE_template->pre_first_nb_rb_ul = rbs[r].start;
+      // UE_template->pre_allocated_rb_table_index_ul = rb_idx_given[UE_id];
+      // UE_template->pre_allocated_nb_rb_ul = rb_table[rb_idx_given[UE_id]];
+      // rbs[r].start += rb_table[rb_idx_given[UE_id]];
+      if (rbs[r].start + rb_table[rb_idx_given[UE_id]] > N_RB_UL) {
+          LOG_W(MAC, "%d.%d UL pre-proc: UE %d skipped, would exceed N_RB_UL (%d+%d>%d)\n",
+                sched_frame, sched_subframe, UE_id,
+                rbs[r].start, rb_table[rb_idx_given[UE_id]], N_RB_UL);
+          UE_template->pre_allocated_nb_rb_ul       = 0;
+          UE_template->pre_allocated_rb_table_index_ul = 0;
+          UE_template->pre_first_nb_rb_ul           = 0;
+          continue;
+      }
+      UE_template->pre_first_nb_rb_ul              = rbs[r].start;
       UE_template->pre_allocated_rb_table_index_ul = rb_idx_given[UE_id];
-      UE_template->pre_allocated_nb_rb_ul = rb_table[rb_idx_given[UE_id]];
+      UE_template->pre_allocated_nb_rb_ul          = rb_table[rb_idx_given[UE_id]];
       rbs[r].start += rb_table[rb_idx_given[UE_id]];
       LOG_D(MAC, "%4d.%d UE %d allocated %d RBs start %d new start %d\n",
             sched_frame,

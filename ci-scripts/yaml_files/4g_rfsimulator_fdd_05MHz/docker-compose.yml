@@ -51,7 +51,7 @@ services:
       APN1: oai.ipv4
       APN2: internet
       FIRST_IMSI: 208960100000001
-      NB_USERS: 10
+      NB_USERS: 20
     healthcheck:
       test: /bin/bash -c "pgrep oai_hss"
       interval: 10s

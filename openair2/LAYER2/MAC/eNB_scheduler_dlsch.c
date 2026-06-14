@@ -40,6 +40,8 @@
 #include "T.h"
 #include "openair2/LAYER2/MAC/mac_extern.h"
 
+#include <time.h>
+
 #define ENABLE_MAC_PAYLOAD_DEBUG
 // #define DEBUG_eNB_SCHEDULER 1
 
@@ -49,7 +51,6 @@ extern int g_mlwdf_delay[];
 extern float g_mlwdf_thr[];
 extern float g_mlwdf_score[];
 extern float g_ue_qos_alpha[];
-extern int   g_ue_cqi_profile[];
 
 mac_rlc_am_muilist_t rlc_am_mui;
 
@@ -474,15 +475,13 @@ void schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframe
 
     if (mbsfn_flag[CC_id] != 0)
           continue;
-    #ifndef SCHED_MODE_MLWDF
-    #define SCHED_MODE_MLWDF 2
-    #endif
-
-    if (RC.mac[module_idP]->scheduler_mode == SCHED_MODE_MLWDF) {
-        schedule_ue_spec_mlwdf(module_idP, CC_id, frameP, subframeP);
-    } else {
         schedule_ue_spec(module_idP, CC_id, frameP, subframeP);
-    }
+
+    // if (RC.mac[module_idP]->scheduler_mode == SCHED_MODE_MLWDF) {
+    //     schedule_ue_spec_mlwdf(module_idP, CC_id, frameP, subframeP);
+    // } else {
+    //     schedule_ue_spec(module_idP, CC_id, frameP, subframeP);
+    // }
   }
 }
 
@@ -541,6 +540,7 @@ typedef struct {
   csv_entry_t csv_buf[MAX_MOBILES_PER_ENB];
   int csv_buf_n = 0;
   memset(csv_buf, 0, sizeof(csv_buf));
+
 
   start_meas(&eNB->schedule_dlsch);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SCHEDULE_DLSCH, VCD_FUNCTION_IN);
@@ -751,14 +751,16 @@ typedef struct {
           int found = -1;
           for (int _i = 0; _i < csv_buf_n; _i++)
               if (csv_buf[_i].rnti == rnti) { found = _i; break; }
+          // CQI profile calculation
+          const uint8_t _cqi = ue_sched_ctrl->dl_cqi[CC_id];
+          const int cqi_prof = (_cqi >= 12) ? 0 : (_cqi >= 7) ? 1 : 2;
           if (found < 0)
               csv_buf[csv_buf_n++] = (csv_entry_t){
-                  (long)(frameP * 10 + subframeP),
-                  frameP, subframeP, rnti, nb_rb, rb_util,
+                  0, frameP, subframeP, rnti, nb_rb, rb_util,
                   ue_template->oldmcs1[harq_pid], TBS,
                   /*sdu_len=*/0, ue_sched_ctrl->dl_cqi[0], /*retx=*/1,
                   g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
-                  g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
+                  g_ue_qos_alpha[UE_id], cqi_prof, harq_pid};
           else if (nb_rb > csv_buf[found].nb_rb) {
               csv_buf[found].nb_rb    = nb_rb;
               csv_buf[found].rb_util  = rb_util;
@@ -929,15 +931,18 @@ typedef struct {
             int found = -1;
             for (int _i = 0; _i < csv_buf_n; _i++)
                 if (csv_buf[_i].rnti == rnti) { found = _i; break; }
+            // CQI profile calculation
+            const uint8_t _cqi = ue_sched_ctrl->dl_cqi[CC_id];
+            const int cqi_prof = (_cqi >= 12) ? 0 : (_cqi >= 7) ? 1 : 2;
+
 
             if (found < 0)
                 csv_buf[csv_buf_n++] = (csv_entry_t){
-                    (long)(frameP * 10 + subframeP),
-                    frameP, subframeP, rnti, nb_rb, rb_util,
+                    0, frameP, subframeP, rnti, nb_rb, rb_util,
                     mcs, TBS,
                     sdu_length_total, ue_sched_ctrl->dl_cqi[0], /*retx=*/0,
                     g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
-                    g_ue_qos_alpha[UE_id], g_ue_cqi_profile[UE_id], harq_pid};
+                    g_ue_qos_alpha[UE_id], cqi_prof, harq_pid};
             else if (nb_rb > csv_buf[found].nb_rb) {
                 csv_buf[found].nb_rb    = nb_rb;
                 csv_buf[found].rb_util  = rb_util;
@@ -1212,18 +1217,41 @@ typedef struct {
       }
     }
   }
-  if (DL_scheduler_csv) {
-    for (int _i = 0; _i < csv_buf_n; _i++) {
-      csv_entry_t *e = &csv_buf[_i];
-      fprintf(DL_scheduler_csv,
-                      "%ld,%d,%d,%x,DL,%d,%.2f,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.4f,%d,%d\n",
-                      e->timestamp, e->frame, e->subframe, e->rnti,
-                      e->nb_rb, e->rb_util, e->mcs, e->TBS,
-                      e->sdu_len, e->cqi, e->retx,
-                      e->mlwdf_delay, e->mlwdf_thr, e->mlwdf_score,
-                      e->qos_alpha, e->cqi_profile, e->harq_pid);
+  if (DL_scheduler_csv && csv_buf_n > 0) {
+    static struct timespec _csv_t0 = {0, 0};
+    static int             _armed  = 0;
+
+    /* Arm on the first TTI where 2+ UEs are scheduled simultaneously.
+     * During keepalive/RRC, only 1 UE is ever scheduled per TTI.
+     * The moment iperf3 starts, all UEs have full buffers and the
+     * scheduler serves 2-4 UEs per TTI without exception.
+     * csv_buf_n >= 2 is a hard guarantee from the data: 297 pre-traffic
+     * TTIs, zero had csv_buf_n >= 2. Scheduler-agnostic — works for
+     * Max C/I, Round Robin, PF, M-LWDF, and AI. */
+    if (!_armed && csv_buf_n >= 2) {
+      clock_gettime(CLOCK_MONOTONIC, &_csv_t0);
+      _armed = 1;
+      LOG_I(MAC, "[SCHED_LOG] Multi-UE TTI (n=%d) — CSV armed, t=0\n", csv_buf_n);
     }
-    fflush(DL_scheduler_csv);
+
+    if (_armed) {
+      struct timespec _csv_now;
+      clock_gettime(CLOCK_MONOTONIC, &_csv_now);
+      long csv_timestamp_ms = (_csv_now.tv_sec  - _csv_t0.tv_sec)  * 1000L
+                            + (_csv_now.tv_nsec - _csv_t0.tv_nsec) / 1000000L;
+
+      for (int _i = 0; _i < csv_buf_n; _i++) {
+        csv_entry_t *e = &csv_buf[_i];
+        fprintf(DL_scheduler_csv,
+                "%ld,%d,%d,%x,DL,%d,%.2f,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.4f,%d,%d\n",
+                csv_timestamp_ms, e->frame, e->subframe, e->rnti,
+                e->nb_rb, e->rb_util, e->mcs, e->TBS,
+                e->sdu_len, e->cqi, e->retx,
+                e->mlwdf_delay, e->mlwdf_thr, e->mlwdf_score,
+                e->qos_alpha, e->cqi_profile, e->harq_pid);
+      }
+      fflush(DL_scheduler_csv);
+    }
   }
 
   // UE_id loop

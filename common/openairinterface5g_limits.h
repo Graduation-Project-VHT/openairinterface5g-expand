@@ -10,11 +10,11 @@
 #        define NUMBER_OF_gNB_MAX 1
 #        define NUMBER_OF_RU_MAX 2
 #        define NUMBER_OF_NR_RU_MAX 2
-#        define NUMBER_OF_UCI_MAX 16
-#        define NUMBER_OF_ULSCH_MAX 8
-#        define NUMBER_OF_DLSCH_MAX 8 
-#        define NUMBER_OF_SRS_MAX 16
-#        define NUMBER_OF_SCH_STATS_MAX 16
+#        define NUMBER_OF_UCI_MAX (MAX_MOBILES_PER_GNB * 4)
+#        define NUMBER_OF_ULSCH_MAX (MAX_MOBILES_PER_GNB)
+#        define NUMBER_OF_DLSCH_MAX (MAX_MOBILES_PER_GNB)
+#        define NUMBER_OF_SRS_MAX (MAX_MOBILES_PER_GNB)
+#        define NUMBER_OF_SCH_STATS_MAX (MAX_MOBILES_PER_GNB)
 
 
 #        ifndef PHYSIM

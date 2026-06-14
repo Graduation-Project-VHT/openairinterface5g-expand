@@ -31,17 +31,17 @@ def get_tunnel_ip(container: str) -> str | None:
     Looks for any 'oaitun_ue' interface and returns its IPv4 address.
     We cannot hardcode these — the SPGW assigns them by attach order.
     """
-    output = docker_exec(container, ["ip", "addr", "show"], detach=False)
-    # simpler approach: just grep for the oaitun interface block
-    for i, line in enumerate(output.splitlines()):
-        if "oaitun_ue" in line:
-            # next lines contain the inet address
-            for sub in output.splitlines()[i:i+5]:
-                sub = sub.strip()
-                if sub.startswith("inet ") and not sub.startswith("inet6"):
-                    return sub.split()[1].split("/")[0]
-    return None
-
+    for iface in ["oaitun_ue1", "oaitun_ue"]:  # try both common names
+        output = docker_exec(
+            container,
+            ["ip", "addr", "show", iface],
+            detach=False
+        )
+        for line in output.splitlines():
+            line = line.strip()
+            if line.startswith("inet ") and not line.startswith("inet6"):
+                return line.split()[1].split("/")[0]
+    return None  # interface doesn't exist or has no IP yet
 
 # ─── Data Model ───────────────────────────────────────────────────────────────
 
@@ -219,42 +219,6 @@ def start_clients(ues: list[UE], bandwidth: str, duration: int, dry_run: bool):
     print(f"\n{'─'*50}")
     print(f"  [2/3] Starting iperf3 clients on {config.TRF_GEN_CONTAINER}")
     print(f"{'─'*50}")
-
-    # for ue in ues:
-    #     if not dry_run and not check_container_running(ue.container):
-    #         print(f"  ✗ Container '{ue.container}' is not running — skipping.")
-    #         continue
-    #     # Discover the actual tunnel IP at runtime
-    #     actual_tunnel_ip = get_tunnel_ip(
-    #         ue.container) if not dry_run else ue.tunnel_ip
-    #     if not dry_run and not actual_tunnel_ip:
-    #         print(
-    #             f"  ✗ No tunnel interface found on {ue.container} — is it attached?")
-    #         continue
-    #
-    #     print(
-    #         f"  → UE{ue.index} (actual tunnel: {actual_tunnel_ip}) → {config.TRF_GEN_IP}:{ue.port} ...", end=" ")
-    #
-    #     log_path = f"/tmp/iperf3_ue{ue.index}.txt"
-    #
-    #     docker_exec(
-    #         ue.container,
-    #         [
-    #             "iperf3",
-    #             "-c", config.TRF_GEN_IP,
-    #             "-B", actual_tunnel_ip,
-    #             "-u",
-    #             "-b", bandwidth,
-    #             "-t", str(duration),
-    #             "-R",
-    #             "-p", str(ue.port),
-    #             "--logfile", log_path,
-    #         ],
-    #         detach=True,
-    #         dry_run=dry_run,
-    #     )
-    #     if not dry_run:
-    #         print("✓")
 
     for ue in ues:
         actual_tunnel_ip = get_tunnel_ip(ue.container) if not dry_run else ue.tunnel_ip
