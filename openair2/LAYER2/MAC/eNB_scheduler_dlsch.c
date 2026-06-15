@@ -572,6 +572,116 @@ typedef struct {
     eNB_UE_stats->TBS = 0;
     const rnti_t rnti = ue_template->rnti;
 
+    // =======================================================
+        // [VHT-GRADUATION] SCENARIO S6: MIXED MOBILITY (V6.1)
+        // =======================================================
+        int S6_TEST_ENABLE = 1;
+
+        if (S6_TEST_ENABLE) {
+            #define NUM_VICTIMS 3
+            #define TOTAL_UES_EXPECTED 15
+
+            static rnti_t victim_rntis[NUM_VICTIMS] = {0};
+            static rnti_t all_rntis[TOTAL_UES_EXPECTED] = {0};
+
+            static int victim_count = 0;
+            static int total_ue_count = 0;
+
+            static int last_frame = -1;
+            static int last_subframe = -1;
+            static long abs_tti = 0;
+            static long trigger_tti = -1; // -1 means timer hasn't started
+
+            // 1. Absolute TTI Counter
+            if (frameP != last_frame || subframeP != last_subframe) {
+                abs_tti++;
+                last_frame = frameP;
+                last_subframe = subframeP;
+            }
+
+            if (rnti != 0) {
+                // 2. Track total unique UEs connected to the eNB
+                int is_new_ue = 1;
+                for (int i = 0; i < total_ue_count; i++) {
+                    if (all_rntis[i] == rnti) {
+                        is_new_ue = 0;
+                        break;
+                    }
+                }
+                if (is_new_ue && total_ue_count < TOTAL_UES_EXPECTED) {
+                    all_rntis[total_ue_count] = rnti;
+                    total_ue_count++;
+                    LOG_I(MAC, "[S6_TEST_INIT] UE %d connected (RNTI: %x)\n", total_ue_count, rnti);
+                }
+
+                // 3. Start countdown ONLY when all 5 UEs are online
+                // Since Docker runs ~3x slower than real time, 10,000 TTIs equals ~30 real seconds.
+                if (total_ue_count == TOTAL_UES_EXPECTED && trigger_tti == -1) {
+                    trigger_tti = abs_tti + 10000;
+                    LOG_I(MAC, "[S6_TEST_TIMER] All %d UEs connected! CQI changes will trigger at TTI %ld\n", TOTAL_UES_EXPECTED, trigger_tti);
+                }
+
+                // 4. Find and Lock Victim UEs
+                int victim_index = -1;
+                for (int v = 0; v < victim_count; v++) {
+                    if (victim_rntis[v] == rnti) {
+                        victim_index = v;
+                        break;
+                    }
+                }
+
+                if (victim_index == -1 && victim_count < NUM_VICTIMS) {
+                    victim_rntis[victim_count] = rnti;
+                    victim_index = victim_count;
+                    victim_count++;
+                }
+
+                // 5. Execute CQI Trajectories
+                if (victim_index != -1 && trigger_tti != -1) {
+                    int simulated_cqi = 15;
+
+                    // Speed of CQI change (Step size): 1 CQI drop per 300 TTIs (~1 real second)
+                    long step_size = 300;
+
+                    // FLOW A: UE 1 (Drops down to CQI 4 right after trigger)
+                    if (victim_index == 0) {
+                        if (abs_tti >= trigger_tti) {
+                            long drop_amount = (abs_tti - trigger_tti) / step_size;
+                            simulated_cqi = 15 - (int)drop_amount;
+                            if (simulated_cqi < 4) simulated_cqi = 4;
+                        } else {
+                            simulated_cqi = 15;
+                        }
+                    }
+                    // FLOW A': UE 2 (Drops down to CQI 6, starts 2000 TTIs LATER to separate lines)
+                    else if (victim_index == 1) {
+                        long ue2_trigger = trigger_tti + 2000; // ~6s real-time delay after UE 1
+                        if (abs_tti >= ue2_trigger) {
+                            long drop_amount = (abs_tti - ue2_trigger) / step_size;
+                            simulated_cqi = 15 - (int)drop_amount;
+                            if (simulated_cqi < 6) simulated_cqi = 6;
+                        } else {
+                            simulated_cqi = 15;
+                        }
+                    }
+                    // FLOW B: UE 3 (Increases from 4 to 15 after trigger)
+                    else if (victim_index == 2) {
+                        if (abs_tti < trigger_tti) {
+                            simulated_cqi = 4; // Force low CQI initially
+                        } else {
+                            long increase_amount = (abs_tti - trigger_tti) / step_size;
+                            simulated_cqi = 4 + (int)increase_amount;
+                            if (simulated_cqi > 15) simulated_cqi = 15;
+                        }
+                    }
+
+                    // Override OAI's internal CQI memory
+                    ue_sched_ctrl->dl_cqi[CC_id] = simulated_cqi;
+                }
+            }
+        }
+        // =======================================================
+
     // If TDD
     if (cc[CC_id].tdd_Config != NULL) { // TDD
       set_ue_dai(subframeP, UE_id, CC_id, cc[CC_id].tdd_Config->subframeAssignment, UE_info);
