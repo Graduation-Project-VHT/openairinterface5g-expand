@@ -572,111 +572,78 @@ typedef struct {
     eNB_UE_stats->TBS = 0;
     const rnti_t rnti = ue_template->rnti;
 
-    // =======================================================
-        // [VHT-GRADUATION] SCENARIO S6: MIXED MOBILITY (V6.1)
+// =======================================================
+        // [VHT-GRADUATION] SCENARIO S4: HETEROGENEOUS TRAFFIC (QoS CLASSES)
         // =======================================================
-        int S6_TEST_ENABLE = 1;
+        int S4_TEST_ENABLE = 1;
 
-        if (S6_TEST_ENABLE) {
-            #define NUM_VICTIMS 3
+        if (S4_TEST_ENABLE) {
             #define TOTAL_UES_EXPECTED 15
+            
+            // Define how many UEs belong to each QoS Class
+            #define NUM_VOIP_UES 5        // QCI 1: High Priority (Low Delay tolerance)
+            #define NUM_VIDEO_UES 5       // QCI 4: Medium Priority (Stable Bandwidth)
+            #define NUM_BEST_EFFORT_UES 5 // QCI 9: Low Priority (Background Traffic)
 
-            static rnti_t victim_rntis[NUM_VICTIMS] = {0};
             static rnti_t all_rntis[TOTAL_UES_EXPECTED] = {0};
-
-            static int victim_count = 0;
             static int total_ue_count = 0;
 
-            static int last_frame = -1;
-            static int last_subframe = -1;
-            static long abs_tti = 0;
-            static long trigger_tti = -1; // -1 means timer hasn't started
-
-            // 1. Absolute TTI Counter
-            if (frameP != last_frame || subframeP != last_subframe) {
-                abs_tti++;
-                last_frame = frameP;
-                last_subframe = subframeP;
-            }
-
             if (rnti != 0) {
-                // 2. Track total unique UEs connected to the eNB
-                int is_new_ue = 1;
+                // 1. Track total unique UEs and find their assigned index
+                int ue_index = -1;
                 for (int i = 0; i < total_ue_count; i++) {
                     if (all_rntis[i] == rnti) {
-                        is_new_ue = 0;
+                        ue_index = i;
                         break;
                     }
                 }
-                if (is_new_ue && total_ue_count < TOTAL_UES_EXPECTED) {
+
+                // If it is a new UE, register it and assign its QoS Class
+                if (ue_index == -1 && total_ue_count < TOTAL_UES_EXPECTED) {
                     all_rntis[total_ue_count] = rnti;
+                    ue_index = total_ue_count;
                     total_ue_count++;
-                    LOG_I(MAC, "[S6_TEST_INIT] UE %d connected (RNTI: %x)\n", total_ue_count, rnti);
-                }
+                    
+                    if (ue_index < NUM_VOIP_UES) {
+                        LOG_I(MAC, "[S4_TEST_INIT] UE %d connected (RNTI: %x) - Assigned to VoIP (QCI 1) - High Priority\n", total_ue_count, rnti);
+                    } else if (ue_index < (NUM_VOIP_UES + NUM_VIDEO_UES)) {
+                        LOG_I(MAC, "[S4_TEST_INIT] UE %d connected (RNTI: %x) - Assigned to Video (QCI 4) - Medium Priority\n", total_ue_count, rnti);
+                    } else {
+                        LOG_I(MAC, "[S4_TEST_INIT] UE %d connected (RNTI: %x) - Assigned to Best-Effort (QCI 9) - Low Priority\n", total_ue_count, rnti);
+                    }
 
-                // 3. Start countdown ONLY when all 5 UEs are online
-                // Since Docker runs ~3x slower than real time, 10,000 TTIs equals ~30 real seconds.
-                if (total_ue_count == TOTAL_UES_EXPECTED && trigger_tti == -1) {
-                    trigger_tti = abs_tti + 10000;
-                    LOG_I(MAC, "[S6_TEST_TIMER] All %d UEs connected! CQI changes will trigger at TTI %ld\n", TOTAL_UES_EXPECTED, trigger_tti);
-                }
-
-                // 4. Find and Lock Victim UEs
-                int victim_index = -1;
-                for (int v = 0; v < victim_count; v++) {
-                    if (victim_rntis[v] == rnti) {
-                        victim_index = v;
-                        break;
+                    // Alert when all UEs are ready
+                    if (total_ue_count == TOTAL_UES_EXPECTED) {
+                        LOG_I(MAC, "[S4_TEST_READY] All %d UEs connected! QoS Environment split: 5 VoIP, 5 Video, 5 Best-Effort.\n", TOTAL_UES_EXPECTED);
                     }
                 }
 
-                if (victim_index == -1 && victim_count < NUM_VICTIMS) {
-                    victim_rntis[victim_count] = rnti;
-                    victim_index = victim_count;
-                    victim_count++;
-                }
+                // 2. Inject Virtual QoS Parameters into the Scheduling Logic
+                if (ue_index != -1) {
+                    double virtual_qos_alpha = 1.0; 
+                    int virtual_qci_profile = 9;
 
-                // 5. Execute CQI Trajectories
-                if (victim_index != -1 && trigger_tti != -1) {
-                    int simulated_cqi = 15;
-
-                    // Speed of CQI change (Step size): 1 CQI drop per 300 TTIs (~1 real second)
-                    long step_size = 300;
-
-                    // FLOW A: UE 1 (Drops down to CQI 4 right after trigger)
-                    if (victim_index == 0) {
-                        if (abs_tti >= trigger_tti) {
-                            long drop_amount = (abs_tti - trigger_tti) / step_size;
-                            simulated_cqi = 15 - (int)drop_amount;
-                            if (simulated_cqi < 4) simulated_cqi = 4;
-                        } else {
-                            simulated_cqi = 15;
-                        }
-                    }
-                    // FLOW A': UE 2 (Drops down to CQI 6, starts 2000 TTIs LATER to separate lines)
-                    else if (victim_index == 1) {
-                        long ue2_trigger = trigger_tti + 2000; // ~6s real-time delay after UE 1
-                        if (abs_tti >= ue2_trigger) {
-                            long drop_amount = (abs_tti - ue2_trigger) / step_size;
-                            simulated_cqi = 15 - (int)drop_amount;
-                            if (simulated_cqi < 6) simulated_cqi = 6;
-                        } else {
-                            simulated_cqi = 15;
-                        }
-                    }
-                    // FLOW B: UE 3 (Increases from 4 to 15 after trigger)
-                    else if (victim_index == 2) {
-                        if (abs_tti < trigger_tti) {
-                            simulated_cqi = 4; // Force low CQI initially
-                        } else {
-                            long increase_amount = (abs_tti - trigger_tti) / step_size;
-                            simulated_cqi = 4 + (int)increase_amount;
-                            if (simulated_cqi > 15) simulated_cqi = 15;
-                        }
+                    if (ue_index < NUM_VOIP_UES) {
+                        // QCI 1 (VoIP) requires extremely low delay. We give it a massive weight.
+                        virtual_qos_alpha = 5.0; 
+                        virtual_qci_profile = 1;
+                    } else if (ue_index < (NUM_VOIP_UES + NUM_VIDEO_UES)) {
+                        // QCI 4 (Video) needs stable bandwidth. We give it a moderate weight.
+                        virtual_qos_alpha = 1.2; 
+                        virtual_qci_profile = 4;
+                    } else {
+                        // QCI 9 (Best-Effort) gets whatever is left over. We shrink its weight.
+                        virtual_qos_alpha = 0.5; 
+                        virtual_qci_profile = 9;
                     }
 
-                    // Override OAI's internal CQI memory
-                    ue_sched_ctrl->dl_cqi[CC_id] = simulated_cqi;
+                    // For Scenario S4, we keep CQI perfect (Stationary) to purely evaluate QoS logic
+                    ue_sched_ctrl->dl_cqi[CC_id] = 15; 
+                    
+                    // 3. Map directly to your custom CSV logger's structure
+                    // This ensures the variables show up perfectly in the 'qos_alpha' and 'cqi_profile' columns
+                    ue_sched_ctrl->qos_alpha = virtual_qos_alpha;
+                    ue_sched_ctrl->cqi_profile = virtual_qci_profile;
                 }
             }
         }
@@ -861,16 +828,14 @@ typedef struct {
           int found = -1;
           for (int _i = 0; _i < csv_buf_n; _i++)
               if (csv_buf[_i].rnti == rnti) { found = _i; break; }
-          // CQI profile calculation
-          const uint8_t _cqi = ue_sched_ctrl->dl_cqi[CC_id];
-          const int cqi_prof = (_cqi >= 12) ? 0 : (_cqi >= 7) ? 1 : 2;
+
           if (found < 0)
               csv_buf[csv_buf_n++] = (csv_entry_t){
                   0, frameP, subframeP, rnti, nb_rb, rb_util,
                   ue_template->oldmcs1[harq_pid], TBS,
                   /*sdu_len=*/0, ue_sched_ctrl->dl_cqi[0], /*retx=*/1,
                   g_mlwdf_delay[UE_id], g_mlwdf_thr[UE_id], g_mlwdf_score[UE_id],
-                  g_ue_qos_alpha[UE_id], cqi_prof, harq_pid};
+                  ue_sched_ctrl->qos_alpha, ue_sched_ctrl->cqi_profile, harq_pid};
           else if (nb_rb > csv_buf[found].nb_rb) {
               csv_buf[found].nb_rb    = nb_rb;
               csv_buf[found].rb_util  = rb_util;

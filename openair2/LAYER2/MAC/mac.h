@@ -1002,6 +1002,8 @@ typedef struct {
   /* Not implemented yet */
   /* End of C-DRX related timers */
   uint32_t rlc_out_of_resources_cnt;
+  double qos_alpha;
+  int cqi_profile;
 } UE_sched_ctrl_t;
 
 /*! \brief eNB template for the Random access information */

@@ -28,10 +28,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue0.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue0.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue0.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue0.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -60,10 +60,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue1.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue1.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue1.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue1.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -92,10 +92,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue2.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue2.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue2.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue2.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -124,10 +124,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue3.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue3.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue3.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue3.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -156,10 +156,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue4.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue4.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue4.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue4.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -188,10 +188,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue5.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue5.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue5.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue5.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -220,10 +220,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue6.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue6.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue6.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue6.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -252,10 +252,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue7.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue7.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue7.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue7.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -284,10 +284,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue8.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue8.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue8.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue8.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -316,10 +316,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue9.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue9.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue9.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue9.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -348,10 +348,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue10.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue10.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue10.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue10.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -380,10 +380,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue11.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue11.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue11.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue11.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -412,10 +412,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue12.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue12.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue12.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue12.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -444,10 +444,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue13.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue13.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue13.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue13.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
@@ -476,10 +476,10 @@ services:
                 --rfsimulator.[0].serveraddr 192.168.61.20
                 --log_config.global_log_options level,nocolor,time
         volumes:
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue14.conf:/opt/oai-lte-ue/etc/ue_usim.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue14.conf:/opt/oai-lte-ue/etc/ue.conf
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
-            - /home/kiet/Nextcloud/Projects/working/OAI-expand/openairinterface5g-expand:/openairinterface5g
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.usim-ci-ue14.conf:/opt/oai-lte-ue/etc/ue_usim.conf
+            - /root/Projects/Working/openairinterface5g-expand/ci-scripts/conf_files/lteue.rfsim-ue14.conf:/opt/oai-lte-ue/etc/ue.conf
+            - /root/Projects/Working/openairinterface5g-expand/cmake_targets/ran_build/build/lte-uesoftmodem:/opt/oai-lte-ue/bin/lte-uesoftmodem
+            - /root/Projects/Working/openairinterface5g-expand:/openairinterface5g
         healthcheck:
             test: /bin/bash -c "pgrep lte-uesoftmodem"
             interval: 10s
