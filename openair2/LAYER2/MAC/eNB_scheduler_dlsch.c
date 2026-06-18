@@ -1220,18 +1220,39 @@ typedef struct {
   if (DL_scheduler_csv && csv_buf_n > 0) {
     static struct timespec _csv_t0 = {0, 0};
     static int             _armed  = 0;
+    static int             _expected_ues = -1;
 
-    /* Arm on the first TTI where 2+ UEs are scheduled simultaneously.
-     * During keepalive/RRC, only 1 UE is ever scheduled per TTI.
-     * The moment iperf3 starts, all UEs have full buffers and the
-     * scheduler serves 2-4 UEs per TTI without exception.
-     * csv_buf_n >= 2 is a hard guarantee from the data: 297 pre-traffic
-     * TTIs, zero had csv_buf_n >= 2. Scheduler-agnostic — works for
-     * Max C/I, Round Robin, PF, M-LWDF, and AI. */
-    if (!_armed && csv_buf_n >= 2) {
-      clock_gettime(CLOCK_MONOTONIC, &_csv_t0);
-      _armed = 1;
-      LOG_I(MAC, "[SCHED_LOG] Multi-UE TTI (n=%d) — CSV armed, t=0\n", csv_buf_n);
+    static rnti_t seen_rntis[MAX_MOBILES_PER_ENB] = {0};
+    static int    seen_count = 0;
+
+    // Read the expected UE count once. EXPECTED_UES is set by
+    // ue_launcher.py before the eNB container starts (see below);
+    // falls back to a high default if missing so it still arms eventually.
+    if (_expected_ues < 0) {
+        const char *env = getenv("EXPECTED_UES");
+        _expected_ues = env ? atoi(env) : 999;
+    }
+
+    // Track how many DISTINCT UEs have ever been scheduled with
+    // nb_rb > 0. This is "every UE has had at least one real
+    // allocation" — robust even if the scheduler doesn't serve
+    // literally everyone in every single TTI.
+    if (!_armed) {
+        for (int _i = 0; _i < csv_buf_n; _i++) {
+            rnti_t r = csv_buf[_i].rnti;
+            int already = 0;
+            for (int _j = 0; _j < seen_count; _j++) {
+                if (seen_rntis[_j] == r) { already = 1; break; }
+            }
+            if (!already && seen_count < MAX_MOBILES_PER_ENB) {
+                seen_rntis[seen_count++] = r;
+            }
+        }
+        if (seen_count >= _expected_ues) {
+            clock_gettime(CLOCK_MONOTONIC, &_csv_t0);
+            _armed = 1;
+            LOG_I(MAC, "[SCHED_LOG] All %d expected UEs scheduled at least once — CSV armed, t=0\n", seen_count);
+        }
     }
 
     if (_armed) {

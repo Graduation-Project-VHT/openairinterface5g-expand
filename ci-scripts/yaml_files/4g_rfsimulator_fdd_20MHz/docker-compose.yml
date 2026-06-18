@@ -187,6 +187,7 @@ services:
             public_net:
                 ipv4_address: 192.168.61.20
         environment:
+            EXPECTED_UES: 15
             TZ: Europe/Paris
             ASAN_OPTIONS: detect_leaks=0
             USE_ADDITIONAL_OPTIONS: --rfsim --log_config.global_log_options level,nocolor,time

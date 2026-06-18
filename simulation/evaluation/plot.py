@@ -22,6 +22,7 @@ if df.empty:
     print(f"[ERROR] The file {csv_file} is empty!")
     exit()
 
+
 rntis = df["rnti"].unique()
 
 # ==========================================
